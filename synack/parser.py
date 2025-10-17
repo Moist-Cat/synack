@@ -1,3 +1,4 @@
+import json
 import ply.lex as lex
 import ply.yacc as yacc
 import re
@@ -16,6 +17,8 @@ from synack.tree import (
     ErrorNode,
 )
 
+__version__ = "0.0.1"
+
 
 class SYNOPParser:
     def __init__(self):
@@ -24,6 +27,10 @@ class SYNOPParser:
         self.errors = []
         self.build_lexer()
         self.build_parser()
+
+        # Add this to semantic analysis when we implement it
+        self.units = {
+        }
 
     # ==================== LEXER DEFINITION ====================
 
@@ -42,23 +49,29 @@ class SYNOPParser:
     )
 
     # Token regex patterns
-    t_LETTERS = r"[A-Z]{2,}"  # Letter groups (like AAXX, BBXX)
-    t_EQUALS = r"="
+    t_LETTERS = r"[A-Za-z]{2,}"  # Letter groups (like AAXX, BBXX)
     t_WHITESPACE = r"\s+"
+
+    # Ignore whitespace
+    t_ignore = " \t"
 
     t_DELIMITER_2 = "222"
     t_DELIMITER_3 = "333"
     t_DELIMITER_4 = "444"
     t_DELIMITER_5 = "555"
 
-    t_ZERO_CHUNK = r"00[0-9\\]{1,3}"
+    def t_ZERO_CHUNK(self, t):
+        r"00[0-9\/]{1,3}"
+        return t
 
-    # Ignore whitespace
-    t_ignore = " \t"
+    def t_EQUALS(self, t):
+        "="
+        # ignore
+        return
 
     def t_DIGITS(self, t):
-        r"[0-9\\]{4,6}"
-        t.value.replace("\\", "0")
+        r"[0-9\/]{4,6}"
+        #t.value.replace("\/", "0")
         return t
 
     def t_SLASH(self, t):
@@ -78,7 +91,8 @@ class SYNOPParser:
 
     def p_synop_message(self, p):
         """
-        synop_message : section_0 section_I EQUALS
+        synop_message : section_0 section_1 EQUALS
+                      | section_0 section_1 
         """
         p[0] = Metadata(p[1], p[2]).to_dict()
 
@@ -92,6 +106,7 @@ class SYNOPParser:
 
         station_data = build_station_info(message_type, station_group)
 
+
         if len(date_group) < 5:
             msg = f"Invalid date/time group: {date_group}"
             self.errors.append(msg)
@@ -101,13 +116,16 @@ class SYNOPParser:
         else:
             date_data = build_date_location(date_group)
 
+        # NOTE lookbehind
+        self.units["wind"] = date_data.wind_units if hasattr(date_data, "wind_units") else None
+
         p[0] = Metadata(date_data, station_data, name="section_0")
 
     # Section I: Wind and Visibility and clouds iRiXhVV (iiiNddff or Nddff) (00fff)
     # and enumerated groups ([0-9][0-9]{4}...)
-    def p_section_I(self, p):
+    def p_section_1(self, p):
         """
-        section_I : wind_visibility_clouds temperature_pressure_groups
+        section_1 : wind_visibility_clouds temperature_pressure_groups
         """
         p[0] = Metadata(
             p[1],
@@ -115,13 +133,18 @@ class SYNOPParser:
             name="section_1",
         )
 
+    # Nddff and 00fff
     def p_wind_visibility_clouds(self, p):
         """
         wind_visibility_clouds : DIGITS DIGITS ZERO_CHUNK
                                | DIGITS DIGITS
+                               | DIGITS ZERO_CHUNK
+                               | DIGITS
         """
+        # the last case, DIGITS ZERO_CHUNK, can happen in rare cases
+        # where Nd are both 0
         group_misc = p[1]
-        group_wind = p[2]
+        group_wind = p[2] if len(p) >= 3 else None
         extra_group = p[3] if len(p) == 4 else None
 
         if len(group_misc) != 5:
@@ -131,12 +154,12 @@ class SYNOPParser:
         else:
             group_misc_data = build_misc(group_misc)
 
-        if len(group_wind) not in {5, 6}:
+        if not group_wind or len(group_wind) not in {5, 6}:
             msg = f"Invalid wind/visibility group: {group_wind}"
             self.errors.append(msg)
             group_wind_data = ErrorNode(field="wind_group")
         else:
-            group_wind_data = build_wind(group_wind, extra_group)
+            group_wind_data = build_wind(group_wind, extra_group, wind_unit=self.units["wind"])
 
         p[0] = Metadata(group_misc_data, group_wind_data, name="wind_visibility_clouds")
 
@@ -148,8 +171,6 @@ class SYNOPParser:
         if len(p) == 2:
             p[0] = Metadata(p[1], name="enumerated_groups")
         else:
-            print(p[1])
-            print(p[2])
             p[2].add(p[1])
             p[0] = p[2]
 
@@ -191,12 +212,34 @@ class SYNOPParser:
             result = self.parser.parse(clean_message, lexer=self.lexer)
             if not result:
                 result = {}
-            result["errors"] = self.errors.copy()
-            return result
+            return {"errors": self.errors.copy(), "message": result}
         except Exception as e:
             self.errors.extend(traceback.format_exception(e))
             self.errors.append(f"Parser error: {str(e)}")
-            return {"errors": self.errors, "raw_message": synop_message}
+            return {"errors": self.errors, "message": synop_message}
+
+    def parse_as_json(self, synop_message):
+        return json.dumps(self.parse(synop_message), indent=2, default=str)
+
+    def p_section_1_error(self, p):
+        """
+        section_1 : error temperature_pressure_groups
+        """
+        # we know nothing about what was back there
+        p[1] = {"wind_visibility_clouds": None}
+        self.p_section_1(p)
+
+    def p_synop_message_error(self, p):
+        """
+        synop_message : section_0 section_1 error EQUALS
+                      | section_0 section_1 error
+                      | section_0 error EQUALS
+                      | section_0 error
+        """
+        self.errors.append(
+            "Found an error at the end of the statement (probably an unimplemented section). Resynchronizing..."
+        )
+        self.p_synop_message(p)
 
     def p_error(self, p):
         if p:
@@ -204,7 +247,7 @@ class SYNOPParser:
                 f"Syntax error at token '{p.value}' (type: {p.type}) at position {p.lexpos}"
             )
         else:
-            self.errors.append("Syntax error at EOF")
+            self.errors.append("Syntax error at EOF (probably due to a missing `=` character)")
 
     def build_parser(self):
         self.parser = yacc.yacc(module=self, debug=False, write_tables=False)

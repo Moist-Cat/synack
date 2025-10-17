@@ -75,7 +75,7 @@ def build_misc(misc_group: str):
     )
 
 
-def build_wind(wind_group, extra_wind_group=None):
+def build_wind(wind_group, extra_wind_group=None, wind_unit=None):
     # Parse wind data
     if len(wind_group) == 6:  # Ship format
         ship_id = wind_group[0:3]
@@ -90,9 +90,8 @@ def build_wind(wind_group, extra_wind_group=None):
 
     cloud_cover = CLOUD_COVER.get(cloud_cover_code)
     wind_direction = WindDirection(wind_dir_code)
-    wind_speed = WindSpeed(wind_speed_code, None)
+    wind_speed = WindSpeed(wind_speed_code, wind_unit)
 
-    # Note: wind_units will be set when combined with metadata
     return WindData(
         ship_id=ship_id,
         cloud_cover=cloud_cover,

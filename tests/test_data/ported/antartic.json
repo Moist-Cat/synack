@@ -1,0 +1,67 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 20,
+      "hour": 10,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "20104"
+    },
+    "station_info": {
+      "station_id": "89646",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "89",
+      "station_number": "646",
+      "original_message_type": "AAXX",
+      "original_station_id": "89646"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": false,
+        "is_staffed": false,
+        "lowest_cloud": "/",
+        "visibility": {
+          "value": null,
+          "unit": "km"
+        },
+        "original": "46///"
+      },
+      "wind_data": {
+        "ship_id": null,
+        "cloud_cover": null,
+        "wind_direction": {
+          "degrees": 220,
+          "direction": "SW"
+        },
+        "wind_speed": {
+          "speed": 113,
+          "unit": "knots"
+        },
+        "original": "/2299"
+      }
+    },
+    "enumerated_groups": {
+      "dew_point_temperature": {
+        "temperature_data": {
+          "sign": 9,
+          "value": 7.9,
+          "unit": "celsius",
+          "original": "9079"
+        }
+      },
+      "station_pressure": {
+        "value": 770.8,
+        "unit": "hPa",
+        "original": "7708"
+      },
+      "sea_level_pressure": {
+        "value": 201.0,
+        "unit": "hPa",
+        "original": "2010"
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union
 from enum import Enum
 import json
+import warnings
 
 PASCAL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
@@ -44,7 +45,8 @@ class ASTNode(ABC):
                     value = data_type(value)
                 except ValueError:
                     value = None
-            else:
+            elif data_type is not str:
+                warnings.warn(f"%s is missing and can not be converted" % (value))
                 value = None
 
             if value is not None and hasattr(self, f"convert_{name}"):
@@ -63,11 +65,13 @@ class ASTNode(ABC):
 class ErrorNode(ASTNode):
     field: str = ""
     description: str = ""
+    name: str = ""
 
-    def __init__(self, fld="", description=""):
+    def __init__(self, name="", field="", description=""):
         super().__init__()
-        self.field = fld
+        self.field = field
         self.description = description
+        self.name = name
 
     def to_dict(self):
         return {"field": self.field, "description": self.description}
@@ -152,11 +156,14 @@ class Metadata(ASTNode):
                     v = cls.to_dict()
             else:
                 if set(cls.keys()).intersection(res.keys()):
-                    raise ValueError("{cls} and {res} contain common keys. Can not merge metadata")
-                res.update(cls)
+                    warnings.warn(
+                        "{cls} and {res} contain common keys. Can not merge metadata"
+                    )
+                else:
+                    res.update(cls)
                 continue
             if k in res:
-                raise ValueError(
+                warnings.warn(
                     f"{k} is already in {self.name}. Either rename it or use another class"
                 )
             res[k] = v
@@ -381,7 +388,7 @@ class PressureData(ASTNode):
 
     def convert_value(self, value):
         value = value / 10
-        if value > 999:
+        if value > 99.9:
             return value
         else:
             return value + 1000
@@ -484,8 +491,8 @@ class CloudType(ASTNode):
 
 @dataclass
 class ObservationTime(ASTNode):
-    hour: Optional[int]
-    minute: Optional[int]
+    hour: int
+    minute: int
     original: str
 
     def to_dict(self) -> Dict[str, Any]:

@@ -1,0 +1,139 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 1,
+      "hour": 0,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "01004"
+    },
+    "station_info": {
+      "station_id": "88889",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "88",
+      "station_number": "889",
+      "original_message_type": "AAXX",
+      "original_station_id": "88889"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": true,
+        "is_staffed": true,
+        "lowest_cloud": "7",
+        "visibility": {
+          "value": 40,
+          "unit": "km"
+        },
+        "original": "12782"
+      },
+      "wind_data": {
+        "ship_id": null,
+        "cloud_cover": "6/8",
+        "wind_direction": {
+          "degrees": 150,
+          "direction": "SSE"
+        },
+        "wind_speed": {
+          "speed": 6,
+          "unit": "knots"
+        },
+        "original": "61506"
+      }
+    },
+    "enumerated_groups": {
+      "air_temperature": {
+        "temperature_data": {
+          "sign": 0,
+          "value": 9.4,
+          "unit": "celsius",
+          "original": "0094"
+        }
+      },
+      "dew_point_temperature": {
+        "temperature_data": {
+          "sign": 0,
+          "value": 4.7,
+          "unit": "celsius",
+          "original": "0047"
+        }
+      },
+      "station_pressure": {
+        "value": 1011.1,
+        "unit": "hPa",
+        "original": "0111"
+      },
+      "sea_level_pressure": {
+        "value": 1019.7,
+        "unit": "hPa",
+        "original": "0197"
+      },
+      "pressure_tendency": {
+        "characteristic": "Decreasing or steady, then increasing",
+        "characteristic_code": "3",
+        "amount": 0.7,
+        "units": "hPa",
+        "original": "3007"
+      },
+      "precipitation_data": {
+        "amount": 0.0,
+        "units": "mm",
+        "duration": "1",
+        "duration_code": "6 hours",
+        "original": "0001"
+      },
+      "weather_group": {
+        "present_weather": {
+          "code": 1,
+          "description": [
+            "Clouds generally dissolving or becoming less developed",
+            "no_precipitation"
+          ],
+          "type": "present"
+        },
+        "past_weather_1": {
+          "code": 0,
+          "description": [
+            "Cloud cover 1/2 or less",
+            "No significant weather"
+          ],
+          "type": "past"
+        },
+        "past_weather_2": {
+          "code": 2,
+          "description": [
+            "Rain",
+            "Liquid precipitation"
+          ],
+          "type": "past"
+        }
+      },
+      "cloud_information": {
+        "low_clouds": {
+          "amount": "1/8 or less",
+          "cloud_type": {
+            "code": "5",
+            "description": "Stratocumulus",
+            "level": "low"
+          }
+        },
+        "mid_clouds": {
+          "cloud_type": {
+            "code": "4",
+            "description": "Altocumulus lenticularis",
+            "level": "mid"
+          }
+        },
+        "high_clouds": {
+          "cloud_type": {
+            "code": "1",
+            "description": "Cirrus fibratus",
+            "level": "high"
+          }
+        }
+      }
+    }
+  }
+}

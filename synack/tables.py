@@ -8,9 +8,11 @@ STATIONS = {
 WIND_UNITS = {
     "0": "m/s (estimated)",
     "1": "m/s",
-    "2": "knots (estimated)",
-    "3": "knots",
-    "4": "not measured",
+    "3": "knots (estimated)",
+    "4": "knots",
+    # yes, it's correct
+    # CODE 1855
+    "2": "not measured",
 }
 
 # Cloud cover
