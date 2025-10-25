@@ -11,6 +11,7 @@ from synack.builder import (
     build_misc,
     build_wind,
     build_enumerated_group,
+    build_section_3_group,
 )
 from synack.tree import (
     Metadata,
@@ -39,7 +40,6 @@ class SYNOPParser:
         "DIGITS",
         "LETTERS",
         "EQUALS",
-        "SLASH",
         "WHITESPACE",
         "ZERO_CHUNK",
         "DELIMITER_2",
@@ -55,6 +55,8 @@ class SYNOPParser:
     # Ignore whitespace
     t_ignore = " \t"
 
+    t_EQUALS = "="
+
     t_DELIMITER_2 = "222"
     t_DELIMITER_3 = "333"
     t_DELIMITER_4 = "444"
@@ -64,19 +66,10 @@ class SYNOPParser:
         r"00[0-9\/]{1,3}"
         return t
 
-    def t_EQUALS(self, t):
-        "="
-        # ignore
-        return
-
     def t_DIGITS(self, t):
         r"[0-9\/]{4,6}"
         #t.value.replace("\/", "0")
         return t
-
-    def t_SLASH(self, t):
-        r"/"
-        return 0
 
     def t_error(self, t):
         self.errors.append(
@@ -92,9 +85,18 @@ class SYNOPParser:
     def p_synop_message(self, p):
         """
         synop_message : section_0 section_1 EQUALS
-                      | section_0 section_1 
+                      | section_0 section_1 section_3 EQUALS
+                      | section_0 section_1
+                      | section_0 section_1 section_3
         """
-        p[0] = Metadata(p[1], p[2]).to_dict()
+        if len(p) > 3:
+            p[0] = Metadata(p[1], p[2], p[3], name="main")
+        elif len(p) > 2:
+            p[0] = Metadata(p[1], p[2], name="main")
+        else:
+            p[0] = Metadata(p[1], name="main")
+        p[0] = p[0].to_dict()
+
 
     # Section 0: Message Type (AAXX/BBXX)
     # Location and Time (YYGGi IIiii or YYGGiw IIiii for ships)
@@ -190,6 +192,35 @@ class SYNOPParser:
             group_enumerated = build_enumerated_group(group_type, data)
         p[0] = group_enumerated
 
+    def p_section_3(self, p):
+        """
+        section_3 : DELIMITER_3 section_3_groups
+        """
+        p[0] = Metadata(p[2], name="section_3")
+
+    def p_section_3_groups(self, p):
+        """
+        section_3_groups : section_3_group section_3_groups
+                         | section_3_group
+        """
+        if len(p) == 2:
+            p[0] = Metadata(p[1], name="section_3_groups")
+        else:
+            p[2].add(p[1])
+            p[0] = p[2]
+
+    def p_section_3_group(self, p):
+        """
+        section_3_group : DIGITS
+        """
+        group = p[1]
+        group_type = group[0]  # The first digit identifies the group type
+        data = group[1:]       # The remaining digits are the data
+
+        # You will need to create this new builder function
+        decoded_group = build_section_3_group(group_type, data)
+        p[0] = decoded_group
+
     # ==================== PUBLIC INTERFACE ====================
 
     def parse(self, synop_message):
@@ -229,6 +260,12 @@ class SYNOPParser:
         p[1] = {"wind_visibility_clouds": None}
         self.p_section_1(p)
 
+    def p_section_3_error(self, p):
+        """
+        section_3 : DELIMITER_3 error
+        """
+        breakpoint()
+
     def p_synop_message_error(self, p):
         """
         synop_message : section_0 section_1 error EQUALS
@@ -246,6 +283,8 @@ class SYNOPParser:
             self.errors.append(
                 f"Syntax error at token '{p.value}' (type: {p.type}) at position {p.lexpos}"
             )
+            # discard
+            self.parser.errok()
         else:
             self.errors.append("Syntax error at EOF (probably due to a missing `=` character)")
 

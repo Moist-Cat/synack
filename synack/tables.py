@@ -563,3 +563,55 @@ DURATION_MAP = {
     "9": "15 hours",
     "/": "Not specified",
 }
+
+GROUND_STATE = {
+    "0": "Surface dry without cracks",
+    "1": "Surface moist",
+    "2": "Surface wet",
+    "3": "Flooded",
+    "4": "Surface frozen",
+    "5": "Glaze on surface",
+    "6": "Loose dry dust or sand",
+    "7": "Thin cover of loose dry dust or sand",
+    "8": "Moderate or thick cover of loose dry dust or sand",
+    "9": "Extremely dry with cracks",
+}
+
+GROUND_STATE_SNOW = {
+    "0": "Surface predominantly ice covered",
+    "1": "Compact or wet snow (with or without ice) covering less than one-half",
+    "2": "Compact or wet snow (with or without ice) covering at least one-half",
+    "3": "Even layer of compact or wet snow covering ground completely",
+    "4": "Uneven layer of compact or wet snow covering ground completely",
+    "5": "Loose dry snow covering less than one-half",
+    "6": "Loose dry snow covering at least one-half",
+    "7": "Even layer of loose dry snow covering ground completely",
+    "8": "Uneven layer of loose dry snow covering ground completely",
+    "9": "Snow covering ground completely, deep drifts",
+}
+
+CLOUD_TYPES = {
+    "0": "No significant clouds",
+    "1": "Cumulus humilis or fractus (no vertical development)",
+    "2": "Cumulus mediocris or congestus (moderate vertical development)",
+    "3": "Cumulonimbus calvus",
+    "4": "Stratocumulus cumulogenitus",
+    "5": "Stratocumulus",
+    "6": "Stratus or Fractostratus",
+    "7": "Fractocumulus and Fractostratus",
+    "8": "Cumulus and Stratocumulus",
+    "9": "Cumulonimbus capillatus",
+}
+
+SPECIAL_VISIBILITY = {
+    90: 0.00,
+    91: 0.05,
+    92: 0.2,
+    93: 0.5,
+    94: 1,
+    95: 2,
+    96: 4,
+    97: 10,
+    98: 20,
+    99: 50,
+}

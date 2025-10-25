@@ -10,6 +10,9 @@ from enum import Enum
 import json
 import warnings
 
+from synack.tables import GROUND_STATE, GROUND_STATE_SNOW, CLOUD_TYPES, CLOUD_COVER
+from ply.lex import LexToken
+
 PASCAL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 
@@ -151,7 +154,11 @@ class Metadata(ASTNode):
             k = cls.name if hasattr(cls, "name") and cls.name else get_name(cls)
             if not isinstance(cls, dict):
                 if not isinstance(cls, ASTNode):
-                    v = cls
+                    if isinstance(cls, LexToken):
+                        # some tokens might sneak in due to errors
+                        v = cls.value
+                    else:
+                        v = cls
                 else:
                     v = cls.to_dict()
             else:
@@ -276,20 +283,6 @@ class WindSpeed(ASTNode):
 
     def validate(self):
         return []
-
-
-SPECIAL_VISIBILITY = {
-    90: 0.00,
-    91: 0.05,
-    92: 0.2,
-    93: 0.5,
-    94: 1,
-    95: 2,
-    96: 4,
-    97: 10,
-    98: 20,
-    99: 50,
-}
 
 
 @dataclass
@@ -504,4 +497,124 @@ class ObservationTime(ASTNode):
             errors.append(f"Invalid observation hour: {self.hour}")
         if self.minute is not None and not (0 <= self.minute <= 59):
             errors.append(f"Invalid observation minute: {self.minute}")
+        return errors
+
+# ==================== SECTION 3 AST NODES ====================
+
+@dataclass
+class MaxTemperatureData(ASTNode):
+    """1snTxTxTx - Maximum temperature in tenths of °C"""
+    value: float
+    sign: str
+    original: str
+
+    def to_dict(self):
+        return {
+            "value": self.value,
+            "unit": "degree C",
+            "original": self.original
+        }
+
+    def validate(self):
+        errors = []
+        if self.value is not None and abs(self.value) > 800:  # ±80.0°C
+            errors.append(f"Maximum temperature out of range: {self.value}")
+        return errors
+
+@dataclass
+class MinTemperatureData(ASTNode):
+    """2snTnTnTn - Minimum temperature in tenths of °C"""
+    value: float
+    sign: str
+    original: str
+
+    def to_dict(self):
+        return {
+            "value": self.value,
+            "unit": "degree C",
+            "original": self.original
+        }
+
+    def validate(self):
+        errors = []
+        if self.value is not None and abs(self.value) > 800:  # ±80.0°C
+            errors.append(f"Minimum temperature out of range: {self.value}")
+        return errors
+
+@dataclass
+class GroundStateData(ASTNode):
+    """3EsnTgTg - Ground state and ground temperature"""
+    ground_state: str
+    temperature: float
+    sign: str
+    original: str
+
+    def to_dict(self):
+        return {
+            "ground_state": self.ground_state,
+            "ground_state_description": GROUND_STATE.get(self.ground_state, "Unknown"),
+            "temperature": self.temperature,
+            "unit": "degree C",
+            "original": self.original
+        }
+
+    def validate(self):
+        errors = []
+        if self.ground_state not in GROUND_STATE:
+            errors.append(f"Invalid ground state code: {self.ground_state}")
+        if self.temperature is not None and abs(self.temperature) > 500:  # ±50.0°C
+            errors.append(f"Ground temperature out of range: {self.temperature}")
+        return errors
+
+@dataclass
+class SnowDepthData(ASTNode):
+    """4E'sss - Snow depth and state of ground with snow"""
+    ground_state_snow: str
+    snow_depth: int
+    original: str
+
+    def to_dict(self):
+        return {
+            "ground_state_snow": self.ground_state_snow,
+            "ground_state_description": GROUND_STATE_SNOW.get(self.ground_state_snow, "Unknown"),
+            "snow_depth": self.snow_depth,
+            "snow_depth_unit": "cm",
+            "original": self.original
+        }
+
+    def validate(self):
+        errors = []
+        if self.ground_state_snow not in GROUND_STATE_SNOW:
+            errors.append(f"Invalid ground state with snow code: {self.ground_state_snow}")
+        if self.snow_depth is not None and self.snow_depth > 999:
+            errors.append(f"Snow depth out of range: {self.snow_depth} cm")
+        return errors
+
+@dataclass
+class CloudLayerData(ASTNode):
+    """8NsChshs - Significant cloud layer"""
+    cloud_amount: str
+    cloud_type: str
+    cloud_height: int
+    original: str
+
+    def to_dict(self):
+        return {
+            "cloud_amount": self.cloud_amount,
+            "cloud_amount_description": CLOUD_COVER.get(self.cloud_amount, "Unknown"),
+            "cloud_type": self.cloud_type,
+            "cloud_type_description": CLOUD_TYPES.get(self.cloud_type, "Unknown"),
+            "cloud_height": self.cloud_height,
+            "cloud_height_unit": "meters",
+            "original": self.original
+        }
+
+    def validate(self):
+        errors = []
+        if self.cloud_amount not in CLOUD_COVER:
+            errors.append(f"Invalid cloud amount code: {self.cloud_amount}")
+        if self.cloud_type not in CLOUD_TYPES:
+            errors.append(f"Invalid cloud type code: {self.cloud_type}")
+        if self.cloud_height is not None and self.cloud_height > 99:  # 99 = 9900+ meters
+            errors.append(f"Cloud height out of range: {self.cloud_height}")
         return errors
