@@ -473,7 +473,7 @@ PRESENT_WEATHER = {
     ),
 }
 
-# Weather categories for past weather
+# 4561
 PAST_WEATHER = {
     "0": ("Cloud cover 1/2 or less", "No significant weather"),
     "1": ("Cloud cover more than 1/2", "No significant weather"),
@@ -487,6 +487,7 @@ PAST_WEATHER = {
     "9": ("Storm", "Storm"),
 }
 
+# https://cloudatlas.wmo.int/es/coding-instructions-cl.html
 CLOUD_TYPE_MAP = {
     "low": {
         "0": "No low clouds",
@@ -564,19 +565,6 @@ DURATION_MAP = {
     "/": "Not specified",
 }
 
-GROUND_STATE = {
-    "0": "Surface dry without cracks",
-    "1": "Surface moist",
-    "2": "Surface wet",
-    "3": "Flooded",
-    "4": "Surface frozen",
-    "5": "Glaze on surface",
-    "6": "Loose dry dust or sand",
-    "7": "Thin cover of loose dry dust or sand",
-    "8": "Moderate or thick cover of loose dry dust or sand",
-    "9": "Extremely dry with cracks",
-}
-
 GROUND_STATE_SNOW = {
     "0": "Surface predominantly ice covered",
     "1": "Compact or wet snow (with or without ice) covering less than one-half",
@@ -591,16 +579,16 @@ GROUND_STATE_SNOW = {
 }
 
 CLOUD_TYPES = {
-    "0": "No significant clouds",
-    "1": "Cumulus humilis or fractus (no vertical development)",
-    "2": "Cumulus mediocris or congestus (moderate vertical development)",
-    "3": "Cumulonimbus calvus",
-    "4": "Stratocumulus cumulogenitus",
-    "5": "Stratocumulus",
-    "6": "Stratus or Fractostratus",
-    "7": "Fractocumulus and Fractostratus",
-    "8": "Cumulus and Stratocumulus",
-    "9": "Cumulonimbus capillatus",
+    "0": "Cirrus Ci",
+    "1": "Cirrocumulus Cc",
+    "2": "Cirrostratus Cs",
+    "3": "Altocumulus Ac",
+    "4": "Altostratus As",
+    "5": "Nimbostratus Ns",
+    "6": "Stratocumulus Sc",
+    "7": "Stratus St",
+    "8": "Cumulus Cu",
+    "9": "Cumulonimbus Cb",
 }
 
 SPECIAL_VISIBILITY = {
@@ -615,3 +603,35 @@ SPECIAL_VISIBILITY = {
     98: 20,
     99: 50,
 }
+
+SPECIAL_CLOUD_HEIGHT = {
+    90: 50,
+    91: 100,
+    92: 200,
+    93: 300,
+    94: 600,
+    95: 1000,
+    96: 1500,
+    97: 2000,
+    98: 2500,
+    99: 0,
+}
+
+DIRECTIONS = [
+    "N",
+    "NNE",
+    "NE",
+    "ENE",
+    "E",
+    "ESE",
+    "SE",
+    "SSE",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW",
+]

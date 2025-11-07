@@ -10,7 +10,11 @@ from enum import Enum
 import json
 import warnings
 
-from synack.tables import GROUND_STATE, GROUND_STATE_SNOW, CLOUD_TYPES, CLOUD_COVER
+from synack.tables import (
+    SPECIAL_VISIBILITY,
+    SPECIAL_CLOUD_HEIGHT,
+    DIRECTIONS,
+)
 from ply.lex import LexToken
 
 PASCAL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
@@ -217,27 +221,6 @@ class MiscData(ASTNode):
     def validate(self) -> List[str]:
         return []
 
-
-DIRECTIONS = [
-    "N",
-    "NNE",
-    "NE",
-    "ENE",
-    "E",
-    "ESE",
-    "SE",
-    "SSE",
-    "S",
-    "SSW",
-    "SW",
-    "WSW",
-    "W",
-    "WNW",
-    "NW",
-    "NNW",
-]
-
-
 @dataclass
 class WindDirection(ASTNode):
     degrees: int
@@ -351,12 +334,15 @@ class TemperatureData(ASTNode):
     sign: int = 1
     original: str = ""
     unit: str = "celsius"
+    # distinguish between max, min, and the rest
+    note: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "sign": self.sign,
             "value": self.value,
             "unit": self.unit,
+            "note": self.note,
             "original": self.original,
         }
 
@@ -450,6 +436,28 @@ class PrecipitationData(ASTNode):
     def validate(self) -> List[str]:
         return []
 
+@dataclass
+class PrecipitationDaily(ASTNode):
+    amount: float
+    unit: str = "mm"
+    original: str = ""
+
+    def validate_amount(self, value):
+        if value == 0 or value == 9999:
+            return 0.0
+        else:
+            return value / 10
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "amount": self.amount,
+            "units": "mm",
+            "original": self.original,
+        }
+
+    def validate(self) -> List[str]:
+        return []
+
 
 @dataclass
 class WeatherCode(ASTNode):
@@ -499,122 +507,89 @@ class ObservationTime(ASTNode):
             errors.append(f"Invalid observation minute: {self.minute}")
         return errors
 
+@dataclass
+class Humidity(ASTNode):
+    """
+    UUU for the 29UUU case
+    """
+    air_humidity: int
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"air_humidity": self.air_humidity}
+
+    def validate(self) -> List[str]:
+        errors = []
+        return errors
+
+
 # ==================== SECTION 3 AST NODES ====================
-
-@dataclass
-class MaxTemperatureData(ASTNode):
-    """1snTxTxTx - Maximum temperature in tenths of °C"""
-    value: float
-    sign: str
-    original: str
-
-    def to_dict(self):
-        return {
-            "value": self.value,
-            "unit": "degree C",
-            "original": self.original
-        }
-
-    def validate(self):
-        errors = []
-        if self.value is not None and abs(self.value) > 800:  # ±80.0°C
-            errors.append(f"Maximum temperature out of range: {self.value}")
-        return errors
-
-@dataclass
-class MinTemperatureData(ASTNode):
-    """2snTnTnTn - Minimum temperature in tenths of °C"""
-    value: float
-    sign: str
-    original: str
-
-    def to_dict(self):
-        return {
-            "value": self.value,
-            "unit": "degree C",
-            "original": self.original
-        }
-
-    def validate(self):
-        errors = []
-        if self.value is not None and abs(self.value) > 800:  # ±80.0°C
-            errors.append(f"Minimum temperature out of range: {self.value}")
-        return errors
-
-@dataclass
-class GroundStateData(ASTNode):
-    """3EsnTgTg - Ground state and ground temperature"""
-    ground_state: str
-    temperature: float
-    sign: str
-    original: str
-
-    def to_dict(self):
-        return {
-            "ground_state": self.ground_state,
-            "ground_state_description": GROUND_STATE.get(self.ground_state, "Unknown"),
-            "temperature": self.temperature,
-            "unit": "degree C",
-            "original": self.original
-        }
-
-    def validate(self):
-        errors = []
-        if self.ground_state not in GROUND_STATE:
-            errors.append(f"Invalid ground state code: {self.ground_state}")
-        if self.temperature is not None and abs(self.temperature) > 500:  # ±50.0°C
-            errors.append(f"Ground temperature out of range: {self.temperature}")
-        return errors
-
 @dataclass
 class SnowDepthData(ASTNode):
     """4E'sss - Snow depth and state of ground with snow"""
+
     ground_state_snow: str
+    ground_state_description: str
     snow_depth: int
     original: str
 
     def to_dict(self):
         return {
             "ground_state_snow": self.ground_state_snow,
-            "ground_state_description": GROUND_STATE_SNOW.get(self.ground_state_snow, "Unknown"),
+            "ground_state_description": self.ground_state_description,
             "snow_depth": self.snow_depth,
             "snow_depth_unit": "cm",
-            "original": self.original
+            "original": self.original,
         }
 
     def validate(self):
         errors = []
-        if self.ground_state_snow not in GROUND_STATE_SNOW:
-            errors.append(f"Invalid ground state with snow code: {self.ground_state_snow}")
         if self.snow_depth is not None and self.snow_depth > 999:
             errors.append(f"Snow depth out of range: {self.snow_depth} cm")
         return errors
 
+
 @dataclass
 class CloudLayerData(ASTNode):
     """8NsChshs - Significant cloud layer"""
+
     cloud_amount: str
+    cloud_amount_description: str
     cloud_type: str
+    cloud_type_description: str
     cloud_height: int
     original: str
+
+
+    def convert_cloud_height(self, height_code):
+        # TABLE 1677
+        # Convert height code to approximate meters
+        # hshs: 00-50 = (code * 30) meters, 56-99 = special values
+        if height_code <= 50:
+            cloud_height = height_code * 30  # Convert to meters
+        elif 56 <= height_code <= 80:
+            cloud_height = (height_code - 55) * 300 + 1500
+        elif 81 <= height_code <= 89:
+            cloud_height = (height_code - 80) * 1500 + 8100
+        elif height_code >= 90:
+            cloud_height = SPECIAL_CLOUD_HEIGHT[height_code]
+        else:
+            cloud_height = None  # Special values (51-55=missing)
 
     def to_dict(self):
         return {
             "cloud_amount": self.cloud_amount,
-            "cloud_amount_description": CLOUD_COVER.get(self.cloud_amount, "Unknown"),
+            "cloud_amount_description": self.cloud_amount_description,
             "cloud_type": self.cloud_type,
-            "cloud_type_description": CLOUD_TYPES.get(self.cloud_type, "Unknown"),
+            "cloud_type_description": self.cloud_type_description,
             "cloud_height": self.cloud_height,
             "cloud_height_unit": "meters",
-            "original": self.original
+            "original": self.original,
         }
 
     def validate(self):
         errors = []
-        if self.cloud_amount not in CLOUD_COVER:
-            errors.append(f"Invalid cloud amount code: {self.cloud_amount}")
-        if self.cloud_type not in CLOUD_TYPES:
-            errors.append(f"Invalid cloud type code: {self.cloud_type}")
-        if self.cloud_height is not None and self.cloud_height > 99:  # 99 = 9900+ meters
+        if (
+            self.cloud_height is not None and self.cloud_height > 99
+        ):  # 99 = 9900+ meters
             errors.append(f"Cloud height out of range: {self.cloud_height}")
         return errors

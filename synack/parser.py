@@ -18,7 +18,7 @@ from synack.tree import (
     ErrorNode,
 )
 
-__version__ = "0.0.1"
+__version__ = "0.2.1"
 
 
 class SYNOPParser:
@@ -30,8 +30,7 @@ class SYNOPParser:
         self.build_parser()
 
         # Add this to semantic analysis when we implement it
-        self.units = {
-        }
+        self.units = {}
 
     # ==================== LEXER DEFINITION ====================
 
@@ -49,7 +48,7 @@ class SYNOPParser:
     )
 
     # Token regex patterns
-    t_LETTERS = r"[A-Za-z]{2,}"  # Letter groups (like AAXX, BBXX)
+    t_LETTERS = r"AAXX|BBXX"
     t_WHITESPACE = r"\s+"
 
     # Ignore whitespace
@@ -68,7 +67,7 @@ class SYNOPParser:
 
     def t_DIGITS(self, t):
         r"[0-9\/]{4,6}"
-        #t.value.replace("\/", "0")
+        # t.value.replace("\/", "0")
         return t
 
     def t_error(self, t):
@@ -97,7 +96,6 @@ class SYNOPParser:
             p[0] = Metadata(p[1], name="main")
         p[0] = p[0].to_dict()
 
-
     # Section 0: Message Type (AAXX/BBXX)
     # Location and Time (YYGGi IIiii or YYGGiw IIiii for ships)
     def p_section_0(self, p):
@@ -107,7 +105,6 @@ class SYNOPParser:
         station_group = p[3]  # IIiii
 
         station_data = build_station_info(message_type, station_group)
-
 
         if len(date_group) < 5:
             msg = f"Invalid date/time group: {date_group}"
@@ -119,7 +116,9 @@ class SYNOPParser:
             date_data = build_date_location(date_group)
 
         # NOTE lookbehind
-        self.units["wind"] = date_data.wind_units if hasattr(date_data, "wind_units") else None
+        self.units["wind"] = (
+            date_data.wind_units if hasattr(date_data, "wind_units") else None
+        )
 
         p[0] = Metadata(date_data, station_data, name="section_0")
 
@@ -161,7 +160,9 @@ class SYNOPParser:
             self.errors.append(msg)
             group_wind_data = ErrorNode(field="wind_group")
         else:
-            group_wind_data = build_wind(group_wind, extra_group, wind_unit=self.units["wind"])
+            group_wind_data = build_wind(
+                group_wind, extra_group, wind_unit=self.units["wind"]
+            )
 
         p[0] = Metadata(group_misc_data, group_wind_data, name="wind_visibility_clouds")
 
@@ -215,7 +216,7 @@ class SYNOPParser:
         """
         group = p[1]
         group_type = group[0]  # The first digit identifies the group type
-        data = group[1:]       # The remaining digits are the data
+        data = group[1:]  # The remaining digits are the data
 
         # You will need to create this new builder function
         decoded_group = build_section_3_group(group_type, data)
@@ -286,7 +287,9 @@ class SYNOPParser:
             # discard
             self.parser.errok()
         else:
-            self.errors.append("Syntax error at EOF (probably due to a missing `=` character)")
+            self.errors.append(
+                "Syntax error at EOF (probably due to a missing `=` character)"
+            )
 
     def build_parser(self):
         self.parser = yacc.yacc(module=self, debug=False, write_tables=False)

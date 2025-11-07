@@ -9,6 +9,7 @@ from synack.tables import (
     ENUMERATED_GROUP,
     TENDENCY_MAP,
     DURATION_MAP,
+    GROUND_STATE_SNOW,
 )
 
 # ==================== AST BUILDER ====================
@@ -103,11 +104,18 @@ def build_wind(wind_group, extra_wind_group=None, wind_unit=None):
 
 def build_enumerated_group(group_type, data):
     if group_type in {"1", "2"}:  # Air temperature and dew point
+        if not data.startswith("29"):
+            parsed = _parse_temperature(data)
+        else:
+            parsed = Humidity(data[2:])
         result = Metadata(
-            _parse_temperature(data),
+            parsed,
             name=ENUMERATED_GROUP[int(group_type) - 1],
         )
     elif group_type in {"3", "4"}:  # Station pressure and sea level pressure
+        # NOTE Depending of the "regional agreement"
+        # The fourth group could be either 4PPPP or 4a_3hhh
+        # we assume 4PPPP here
         result = PressureData(
             data, original=data, name=ENUMERATED_GROUP[int(group_type) - 1]
         )
@@ -122,15 +130,14 @@ def build_enumerated_group(group_type, data):
     elif group_type == "9":  # Time of observation
         result = _parse_observation_time(data)
     else:
-        group_type = "10"
         result = ErrorNode(
-            name="enumerated_group", description=f"Invalid group type {group_type}"
+            name=f"enumerated_group_{group_type}", description=f"Invalid group type {group_type}"
         )
     return result
 
 
 # ==================== CONVERSIONS ====================
-def _parse_temperature(data):
+def _parse_temperature(data, note=""):
     """Parse temperature data (1sTTT or 2sTTT format)"""
     if len(data) < 3 or data == "///":
         return TemperatureData(None, None, original=data)
@@ -144,7 +151,7 @@ def _parse_temperature(data):
         else:
             sign = 1
 
-        return TemperatureData(temp_value, sign_char, original=data)
+        return TemperatureData(temp_value, sign_char, original=data, note=note)
     except ValueError:
         return TemperatureData(None, None, original=data)
 
@@ -261,141 +268,105 @@ def _parse_observation_time(data):
     except ValueError:
         return ObservationTime(None, None, data)
 
+
 # ==================== SECTION 3 BUILDER FUNCTIONS ====================
+
 
 def build_section_3_group(group_type, data):
     """
     Build Section 3 groups (333xx groups) according to WMO standard
     """
-    if group_type == "1":  # 1snTxTxTx - Maximum temperature
-        return _parse_max_temperature(data)
-    elif group_type == "2":  # 2snTnTnTn - Minimum temperature
-        return _parse_min_temperature(data)
-    elif group_type == "3":  # 3EsnTgTg - Ground state and temperature
-        return _parse_ground_state(data)
-    elif group_type == "4":  # 4E'sss - Snow depth
-        return _parse_snow_depth(data)
-    elif group_type == "8":  # 8NsChshs - Cloud layers
-        return _parse_cloud_layer(data)
-    elif group_type == "9":  # 9SpSpspsp - Special phenomena
-        return _parse_special_phenomena(data)
-    else:
-        return ErrorNode(
-            name="section_3_group",
-            description=f"Unsupported Section 3 group type: {group_type}"
+    # no zero group
+    # doesn't handle the mysterious 80000 group (and the extra groups that follow)
+    if group_type in {"1", "2"}: # 1snTxTxTx 2snTnTnTn
+        # recycled
+        result = _parse_temperature(
+            data,
+            note="max" if group_type == "1" else "min"
         )
+    elif group_type == "3":  # 3Ejjj (depends on the regional consensus)
+        result = ErrorNode(
+            name="section_3_group_3",
+            description="The group 3Ejjj of section 3 is not implemented"
+        )
+    elif group_type == "4":  # 4E'sss - Snow depth
+        result = _parse_snow_depth(data)
+    elif group_type == "5":
+        result = ErrorNode(
+            name="section_3_group_5",
+            description="The group 5jjjj jjjjj of section 3 is not implemented"
+        )
+    elif group_type == "6": # same as enumerated groups
+        result = _parse_precipitation(data)
+    elif group_type == "7":
+        result = PrecipitationDaily(data, original=data)
+    elif group_type == "8":  # 8NsChshs - Cloud layers
+        result = _parse_cloud_layer(data)
+    elif group_type == "9":  # 9SpSpspsp - Special phenomena
+        result = _parse_special_phenomena(data)
+    else:
+        result = ErrorNode(
+            name=f"section_3_group_{group_type}",
+            description=f"Unsupported Section 3 group type: {group_type}",
+        )
+    return result
 
-def _parse_max_temperature(data):
-    """Parse maximum temperature group: 1snTxTxTx"""
-    if len(data) < 4 or data == "////":
-        return MaxTemperatureData(None, None, original=data)
-
-    try:
-        sign_char = data[0]
-        temp_value = int(data[1:4])
-
-        # Convert to degrees Celsius (tenths to whole degrees)
-        temperature = temp_value / 10.0
-        if sign_char == "1":
-            temperature = -temperature
-
-        return MaxTemperatureData(temperature, sign_char, original=data)
-    except (ValueError, IndexError):
-        return MaxTemperatureData(None, None, original=data)
-
-def _parse_min_temperature(data):
-    """Parse minimum temperature group: 2snTnTnTn"""
-    if len(data) < 4 or data == "////":
-        return MinTemperatureData(None, None, original=data)
-
-    try:
-        sign_char = data[0]
-        temp_value = int(data[1:4])
-
-        # Convert to degrees Celsius (tenths to whole degrees)
-        temperature = temp_value / 10.0
-        if sign_char == "1":
-            temperature = -temperature
-
-        return MinTemperatureData(temperature, sign_char, original=data)
-    except (ValueError, IndexError):
-        return MinTemperatureData(None, None, original=data)
-
-def _parse_ground_state(data):
-    """Parse ground state group: 3EsnTgTg"""
-    if len(data) < 4 or data == "////":
-        return GroundStateData(None, None, None, original=data)
-
-    try:
-        ground_state = data[0]  # E
-        sign_char = data[1]     # sn
-        temp_value = int(data[2:4])  # TgTg
-
-        # Convert temperature (tenths to whole degrees)
-        temperature = temp_value / 10.0
-        if sign_char == "1":
-            temperature = -temperature
-
-        return GroundStateData(ground_state, temperature, sign_char, original=data)
-    except (ValueError, IndexError):
-        return GroundStateData(None, None, None, original=data)
 
 def _parse_snow_depth(data):
     """Parse snow depth group: 4E'sss"""
     if len(data) < 3 or data == "////":
-        return SnowDepthData(None, None, original=data)
+        return SnowDepthData(None, None, None, original=data)
 
     try:
         ground_state_snow = data[0]  # E'
         snow_depth = int(data[1:4])  # sss
 
-        return SnowDepthData(ground_state_snow, snow_depth, original=data)
+        return SnowDepthData(
+            ground_state_snow,
+            GROUND_STATE_SNOW.get(ground_state_snow),
+            snow_depth,
+            original=data
+        )
     except (ValueError, IndexError):
-        return SnowDepthData(None, None, original=data)
+        return SnowDepthData(None, None, None, original=data)
+
 
 def _parse_cloud_layer(data):
     """Parse cloud layer group: 8NsChshs"""
     if len(data) < 4 or data == "////":
-        return CloudLayerData(None, None, None, original=data)
+        return CloudLayerData(None, None, None, None, None, original=data)
 
     try:
-        cloud_amount = data[0]    # Ns
-        cloud_type = data[1]      # C
+        cloud_amount = data[0]  # Ns
+        cloud_type = data[1]  # C
         cloud_height_code = data[2:4]  # hshs
 
-        # Convert height code to approximate meters
-        # hshs: 00-50 = (code * 30) meters, 56-99 = special values
-        if cloud_height_code.isdigit():
-            height_code = int(cloud_height_code)
-            if height_code <= 50:
-                cloud_height = height_code * 30  # Convert to meters
-            elif 56 <= height_code <= 80:
-                cloud_height = (height_code - 50) * 300 + 1500
-            elif 81 <= height_code <= 89:
-                cloud_height = (height_code - 80) * 1500 + 8100
-            else:  # 90-99
-                cloud_height = None  # Special values (90=missing, 91-99=reserved)
-        else:
-            cloud_height = None
-
-        return CloudLayerData(cloud_amount, cloud_type, cloud_height, original=data)
+        return CloudLayerData(
+            cloud_amount,
+            CLOUD_COVER.get(cloud_amount),
+            cloud_type,
+            CLOUD_TYPES.get(cloud_type),
+            cloud_height_code,
+            original=data
+        )
     except (ValueError, IndexError):
-        return CloudLayerData(None, None, None, original=data)
+        return CloudLayerData(None, None, None, None, None, original=data)
+
 
 def _parse_special_phenomena(data):
     """Parse special phenomena group: 9SpSpspsp"""
-    # This is a complex group that would need its own detailed implementation
-    # For now, return the raw data
+    # TABLE 3778
+    # 100 cases, each one with a different way of
+    # interpreting s_p s_p based on S_p S_p
     if data == "////":
         return Metadata(None, name="special_phenomena")
 
     try:
         return Metadata(
-            {"special_phenomena": data, "original": data},
-            name="special_phenomena"
+            {"special_phenomena": data, "original": data}, name="special_phenomena"
         )
     except (ValueError, IndexError):
         return ErrorNode(
             name="special_phenomena",
-            description=f"Invalid special phenomena data: {data}"
+            description=f"Invalid special phenomena data: {data}",
         )

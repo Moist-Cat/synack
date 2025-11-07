@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 from typing import List, Optional, TextIO
 import csv
+
 try:
     import yaml  # pip install PyYAML
 except ImportError:
@@ -194,7 +195,9 @@ def handle_parse_command(args):
             else:
                 errors.extend(result["errors"])
                 if args.verbose:
-                    print(f"Warning: Failed to parse message {i+1}: {e}", file=sys.stderr)
+                    print(
+                        f"Warning: Failed to parse message {i+1}: {e}", file=sys.stderr
+                    )
         results.append(result)
 
     # Output results
