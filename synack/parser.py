@@ -188,7 +188,7 @@ class SYNOPParser:
         if len(group) < 4:
             msg = f"Invalid temperature/pressure group: {group}"
             self.errors.append(msg)
-            group_enumerated = ErrorNode(field=f"enumerated_group_{group_type}")
+            group_enumerated = ErrorNode(field=f"enumerated_group_{group_type}", description=msg)
         else:
             group_enumerated = build_enumerated_group(group_type, data)
         p[0] = group_enumerated
@@ -215,11 +215,14 @@ class SYNOPParser:
         section_3_group : DIGITS
         """
         group = p[1]
-        group_type = group[0]  # The first digit identifies the group type
-        data = group[1:]  # The remaining digits are the data
-
-        # You will need to create this new builder function
-        decoded_group = build_section_3_group(group_type, data)
+        group_type = group[0]
+        data = group[1:]
+        if len(data) < 4:
+            msg = f"Invalid section 3 group: {group}"
+            self.errors.append(msg)
+            decoded_group = ErrorNode(field=f"section_3_group_{group_type}", description=msg)
+        else:
+            decoded_group = build_section_3_group(group_type, data)
         p[0] = decoded_group
 
     # ==================== PUBLIC INTERFACE ====================
@@ -260,12 +263,6 @@ class SYNOPParser:
         # we know nothing about what was back there
         p[1] = {"wind_visibility_clouds": None}
         self.p_section_1(p)
-
-    def p_section_3_error(self, p):
-        """
-        section_3 : DELIMITER_3 error
-        """
-        breakpoint()
 
     def p_synop_message_error(self, p):
         """

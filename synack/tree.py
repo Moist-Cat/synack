@@ -51,6 +51,7 @@ class ASTNode(ABC):
                 try:
                     value = data_type(value)
                 except ValueError:
+                    warnings.warn(f"Value error while converting %s to %s" % (value, str(data_type)))
                     value = None
             elif data_type is not str:
                 warnings.warn(f"%s is missing and can not be converted" % (value))
@@ -113,8 +114,6 @@ class StationInfo(ASTNode):
 
     def validate(self) -> List[str]:
         errors = []
-        if self.message_type not in ["AAXX", "BBXX", "OOXX"]:
-            errors.append(f"Invalid message type: {self.message_type}")
         return errors
 
 
@@ -199,8 +198,6 @@ class Metadata(ASTNode):
 
 
 # ==================== WEATHER DATA NODES ====================
-
-
 @dataclass
 class MiscData(ASTNode):
     precipitation_included: bool
@@ -306,7 +303,6 @@ class Visibility(ASTNode):
 
 @dataclass
 class WindData(ASTNode):
-    ship_id: Optional[str]
     cloud_cover: str
     wind_direction: WindDirection
     wind_speed: WindSpeed
@@ -314,7 +310,6 @@ class WindData(ASTNode):
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "ship_id": self.ship_id,
             "cloud_cover": self.cloud_cover,
             "wind_direction": self.wind_direction.to_dict(),
             "wind_speed": self.wind_speed.to_dict(),

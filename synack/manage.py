@@ -169,7 +169,7 @@ def handle_parse_command(args):
         messages = args.message
     elif args.file:
         with open(args.file, "r") as f:
-            messages = [line.strip() for line in f if line.strip()]
+            messages = [f.read()]
     elif args.interactive:
         messages = interactive_input()
 
