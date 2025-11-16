@@ -5,15 +5,14 @@ Module in charge of defining and constructing AST nodes
 from abc import ABC, abstractmethod
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Union
-from enum import Enum
+from typing import Dict, List, Optional, Any
 import json
 import warnings
 
 from synack.tables import (
     SPECIAL_VISIBILITY,
     SPECIAL_CLOUD_HEIGHT,
-    DIRECTIONS,
+    COMPASS,
 )
 from ply.lex import LexToken
 
@@ -51,10 +50,12 @@ class ASTNode(ABC):
                 try:
                     value = data_type(value)
                 except ValueError:
-                    warnings.warn(f"Value error while converting %s to %s" % (value, str(data_type)))
+                    warnings.warn(
+                        "Value error while converting %s to %s"
+                        % (value, str(data_type))
+                    )
                     value = None
             elif data_type is not str:
-                warnings.warn(f"%s is missing and can not be converted" % (value))
                 value = None
 
             if value is not None and hasattr(self, f"convert_{name}"):
@@ -65,9 +66,8 @@ class ASTNode(ABC):
     def to_dict(self) -> Dict[str, Any]:
         pass
 
-    @abstractmethod
     def validate(self) -> List[str]:
-        pass
+        return []
 
 
 class ErrorNode(ASTNode):
@@ -173,10 +173,12 @@ class Metadata(ASTNode):
                     res.update(cls)
                 continue
             if k in res:
-                warnings.warn(
-                    f"{k} is already in {self.name}. Either rename it or use another class"
-                )
-            res[k] = v
+                warnings.warn(f"{k} is already in {self.name}. Merging...")
+                if not isinstance(res[k], list):
+                    res[k] = [res[k]]
+                res[k].append(v)
+            else:
+                res[k] = v
         return res
 
     def to_json(self, indent: int = 2) -> str:
@@ -203,6 +205,7 @@ class MiscData(ASTNode):
     precipitation_included: bool
     is_staffed: bool
     lowest_cloud: str
+    lowest_cloud_height: tuple
     visibility: "Visibility"
     original: str
 
@@ -211,12 +214,14 @@ class MiscData(ASTNode):
             "precipitation_included": self.precipitation_included,
             "is_staffed": self.is_staffed,
             "lowest_cloud": self.lowest_cloud,
+            "lowest_cloud_height": self.lowest_cloud_height,
             "visibility": self.visibility.to_dict(),
             "original": self.original,
         }
 
     def validate(self) -> List[str]:
         return []
+
 
 @dataclass
 class WindDirection(ASTNode):
@@ -228,8 +233,10 @@ class WindDirection(ASTNode):
     def convert_direction(self, value):
         if self.degrees is None:
             return value
+        # 16 directions
+        # % 16 <=> zero indexed
         compass_idx = round(self.degrees / 22.5) % 16
-        return DIRECTIONS[compass_idx]
+        return COMPASS[compass_idx]
 
     def to_dict(self):
         return {
@@ -246,15 +253,6 @@ class WindSpeed(ASTNode):
     speed: int
     unit: str = "m/s"
 
-    def convert_degrees(self, value):
-        return value * 10
-
-    def convert_direction(self, value):
-        if self.degrees is None:
-            return value
-        compass_idx = round(self.degrees / 22.5) % 16
-        return DIRECTIONS[compass_ids]
-
     def to_dict(self):
         return {
             "speed": self.speed,
@@ -270,6 +268,7 @@ class Visibility(ASTNode):
     value: int
     unit: str = "km"
 
+    # 4377
     def convert_value(self, code):
         if code <= 50:
             value = code / 10
@@ -278,18 +277,11 @@ class Visibility(ASTNode):
             value = None
         elif code <= 80:
             value = code - 50
-            value = None
         elif code <= 89:
             value = 30 + (code - 80) * 5
         else:
             value = SPECIAL_VISIBILITY.get(code)
         return value
-
-    def convert_direction(self, value):
-        if self.degrees is None:
-            return value
-        compass_idx = round(self.degrees / 22.5) % 16
-        return DIRECTIONS[compass_ids]
 
     def to_dict(self):
         return {
@@ -318,19 +310,25 @@ class WindData(ASTNode):
 
     def validate(self) -> List[str]:
         errors = []
-        if self.wind_speed_ms and self.wind_speed_ms > 100:
-            errors.append(f"Unrealistic wind speed: {self.wind_speed_ms} m/s")
         return errors
 
 
 @dataclass
 class TemperatureData(ASTNode):
-    value: float
-    sign: int = 1
+    sign: int
+    value: int
     original: str = ""
     unit: str = "celsius"
     # distinguish between max, min, and the rest
     note: str = ""
+
+    def convert_sign(self, value):
+        return -1 if value else 1
+
+    def convert_value(self, value):
+        if self.sign is None:
+            return self.value / 10
+        return self.sign * (value / 10)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -340,11 +338,6 @@ class TemperatureData(ASTNode):
             "note": self.note,
             "original": self.original,
         }
-
-    def convert_value(self, value):
-        if self.sign is None:
-            return self.value / 10
-        return self.sign * (value / 10)
 
     def validate(self) -> List[str]:
         errors = []
@@ -408,8 +401,8 @@ class PressureTendency(ASTNode):
 @dataclass
 class PrecipitationData(ASTNode):
     amount: float
-    duration: str
-    duration_code: str
+    duration: int
+    duration_description: str
     unit: str = "mm"
     original: str = ""
 
@@ -424,12 +417,13 @@ class PrecipitationData(ASTNode):
             "amount": self.amount,
             "units": "mm",
             "duration": self.duration,
-            "duration_code": self.duration_code,
+            "duration_description": self.duration_description,
             "original": self.original,
         }
 
     def validate(self) -> List[str]:
         return []
+
 
 @dataclass
 class PrecipitationDaily(ASTNode):
@@ -457,7 +451,7 @@ class PrecipitationDaily(ASTNode):
 @dataclass
 class WeatherCode(ASTNode):
     code: int
-    description: str
+    description: tuple
     weather_type: str
     name: str = ""
 
@@ -502,11 +496,13 @@ class ObservationTime(ASTNode):
             errors.append(f"Invalid observation minute: {self.minute}")
         return errors
 
+
 @dataclass
 class Humidity(ASTNode):
     """
     UUU for the 29UUU case
     """
+
     air_humidity: int
 
     def to_dict(self) -> Dict[str, Any]:
@@ -554,7 +550,6 @@ class CloudLayerData(ASTNode):
     cloud_height: int
     original: str
 
-
     def convert_cloud_height(self, height_code):
         # TABLE 1677
         # Convert height code to approximate meters
@@ -569,6 +564,7 @@ class CloudLayerData(ASTNode):
             cloud_height = SPECIAL_CLOUD_HEIGHT[height_code]
         else:
             cloud_height = None  # Special values (51-55=missing)
+        return cloud_height
 
     def to_dict(self):
         return {
@@ -583,8 +579,256 @@ class CloudLayerData(ASTNode):
 
     def validate(self):
         errors = []
-        if (
-            self.cloud_height is not None and self.cloud_height > 99
-        ):  # 99 = 9900+ meters
-            errors.append(f"Cloud height out of range: {self.cloud_height}")
+        return errors
+
+
+# section 3 group 5
+@dataclass
+class RadiationData(ASTNode):
+    """Radiation data from supplementary group j5j6j7j8j9"""
+
+    radiation_code: int
+    radiation_type: str
+    radiation_type_description: str
+    value: float
+    unit: str
+    original: str
+
+    def to_dict(self):
+        return {
+            "radiation_code": self.radiation_code,
+            "radiation_type": self.radiation_type,
+            "radiation_type_description": self.radiation_type_description,
+            "value": self.value,
+            "unit": self.unit,
+            "original": self.original,
+        }
+
+    def validate(self):
+        errors = []
+        return errors
+
+
+@dataclass
+class Evaporation(ASTNode):
+    """5EEEi_E - Daily evaporation or evapotranspiration"""
+
+    evaporation_mm: float
+    indicator: tuple
+    original: str
+
+    def convert_evaporation_mm(self, value):
+        return value / 10
+
+    def to_dict(self):
+        return {
+            "type": "evaporation",
+            "evaporation_mm": self.evaporation_mm,
+            "indicator": self.indicator,
+            "original": self.original,
+        }
+
+    def validate(self):
+        errors = []
+        return errors
+
+
+@dataclass
+class SunshineDuration(ASTNode):
+    """55SSS or 553SS - Sunshine duration"""
+
+    duration_type: str  # "daily" or "hourly"
+    duration_hours: float
+    radiation_data: Optional[RadiationData] = None
+    original: str = ""
+
+    def convert_duration_hours(self, value):
+        return value / 10
+
+    def to_dict(self):
+        result = {
+            "duration_type": self.duration_type,
+            "duration_hours": self.duration_hours,
+            "original": self.original,
+        }
+        if self.radiation_data:
+            result["radiation_data"] = [val.to_dict() for val in self.radiation_data]
+        return result
+
+    def validate(self):
+        errors = []
+        if self.duration_type == "daily" and self.duration_hours > 24:
+            errors.append(
+                f"Daily sunshine duration exceeds 24 hours: {self.duration_hours}"
+            )
+        if self.duration_type == "hourly" and self.duration_hours > 1:
+            errors.append(
+                f"Hourly sunshine duration exceeds 1 hour: {self.duration_hours}"
+            )
+        return errors
+
+
+@dataclass
+class Radiation(ASTNode):
+    """55407/55408/55507/55508 - Radiation data"""
+
+    radiation_type: str
+    radiation_type_description: str
+    period: str  # "hourly" or "daily"
+    value: Optional[RadiationData] = None
+    unit: str = ""
+    original: str = ""
+
+    def to_dict(self):
+        return {
+            "radiation_type": self.radiation_type,
+            "radiation_type_description": self.radiation_type_description,
+            "period": self.period,
+            "value": [val.to_dict() for val in self.value],
+            "unit": self.unit,
+            "original": self.original,
+        }
+
+    def validate(self):
+        errors = []
+        return errors
+
+
+@dataclass
+class CloudDirection(ASTNode):
+    """56DLDMDH - Cloud direction and movement"""
+
+    direction_low_cloud: int
+    direction_low_cloud_description: str
+    direction_mid_cloud: int
+    direction_mid_cloud_description: str
+    direction_high_cloud: int
+    direction_high_cloud_description: str
+
+    original: str = ""
+
+    def to_dict(self):
+        return {
+            "direction_high_cloud": self.direction_high_cloud,
+            "direction_high_cloud_description": self.direction_high_cloud_description,
+            "direction_mid_cloud": self.direction_mid_cloud,
+            "direction_mid_cloud_description": self.direction_mid_cloud_description,
+            "direction_low_cloud": self.direction_low_cloud,
+            "direction_low_cloud_description": self.direction_low_cloud_description,
+            "original": self.original,
+        }
+
+    def validate(self):
+        return []
+
+
+@dataclass
+class CloudElevation(ASTNode):
+    """56DLDMDH - Cloud direction and movement/elevation"""
+
+    cloud: int
+    cloud_description: str
+    direction: int
+    direction_description: str
+    original: str = ""
+
+    def to_dict(self):
+        return {
+            "cloud": self.cloud,
+            "cloud_description": self.cloud_description,
+            "direction": self.direction,
+            "direction_description": self.direction_description,
+            "original": self.original,
+        }
+
+    def validate(self):
+        return []
+
+
+@dataclass
+class PressureChange(ASTNode):
+    """58 p_24 p_24 p_24 or 59 p_24 p_24 p_24 - Pressure change"""
+
+    sign: int
+    pressure_change: int
+    original: str = ""
+
+    def convert_pressure_change(self, value):
+        return (value / 10) * self.sign
+
+    def to_dict(self):
+        return {
+            "sign": self.sign,
+            "pressure_change": self.pressure_change,
+            "original": self.original,
+        }
+
+    def validate(self):
+        errors = []
+        return errors
+
+
+@dataclass
+class TemperatureChange(ASTNode):
+    """
+    54 g_0 s_n d_T
+    """
+
+    # in hours
+    period: int
+    sign: int
+    temperature_change: int
+    original: str = ""
+
+    def convert_sign(self, value):
+        if value == 0:
+            return 1
+        elif value == 1:
+            return -1
+        elif value == 9:
+            return value
+        return None
+
+    def convert_temperature_change(self, value):
+        if self.sign > 1:
+            return value
+        return self.sign * value
+
+    def to_dict(self):
+        return {
+            "period": self.period,
+            "sign": self.sign,
+            "temperature_change": self.temperature_change,
+            "original": self.original,
+        }
+
+    def validate(self):
+        errors = []
+        return errors
+
+
+# This one is incomplete because we
+# don't know what jjj is
+@dataclass
+class Soil(ASTNode):
+    """
+    3Ejjj
+    """
+
+    # in hours
+    soil: int
+    soil_description: str
+    original: str = ""
+
+    def to_dict(self):
+        return {
+            "soil": self.soil,
+            "soil_description": self.soil_description,
+            "original": self.original,
+        }
+
+    def validate(self):
+        errors = [
+            "Group partially implemented",
+        ]
         return errors

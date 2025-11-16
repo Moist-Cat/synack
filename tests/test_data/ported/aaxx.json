@@ -30,7 +30,6 @@
         "original": "12782"
       },
       "wind_data": {
-        "ship_id": null,
         "cloud_cover": "6/8",
         "wind_direction": {
           "degrees": 150,
@@ -46,17 +45,19 @@
     "enumerated_groups": {
       "air_temperature": {
         "temperature_data": {
-          "sign": 0,
+          "sign": 1,
           "value": 9.4,
           "unit": "celsius",
+          "note": "",
           "original": "0094"
         }
       },
       "dew_point_temperature": {
         "temperature_data": {
-          "sign": 0,
+          "sign": 1,
           "value": 4.7,
           "unit": "celsius",
+          "note": "",
           "original": "0047"
         }
       },
@@ -80,8 +81,8 @@
       "precipitation_data": {
         "amount": 0.0,
         "units": "mm",
-        "duration": "1",
-        "duration_code": "6 hours",
+        "duration": 1,
+        "duration_description": "6 hours",
         "original": "0001"
       },
       "weather_group": {
@@ -133,6 +134,31 @@
             "level": "high"
           }
         }
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "temperature_data": [
+        {
+          "sign": 1,
+          "value": 17.8,
+          "unit": "celsius",
+          "note": "max",
+          "original": "0178"
+        },
+        {
+          "sign": -1,
+          "value": -7.3,
+          "unit": "celsius",
+          "note": "min",
+          "original": "1073"
+        }
+      ],
+      "soil": {
+        "soil": 4,
+        "soil_description": "Ground surface frozen",
+        "original": "4101"
       }
     }
   }

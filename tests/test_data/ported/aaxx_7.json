@@ -1,0 +1,175 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 24,
+      "hour": 12,
+      "wind_indicator": "1",
+      "wind_units": "m/s",
+      "original": "24121"
+    },
+    "station_info": {
+      "station_id": "80110",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "80",
+      "station_number": "110",
+      "original_message_type": "AAXX",
+      "original_station_id": "80110"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": true,
+        "is_staffed": true,
+        "lowest_cloud": "5",
+        "visibility": {
+          "value": 15,
+          "unit": "km"
+        },
+        "original": "01565"
+      },
+      "wind_data": {
+        "cloud_cover": "7/8 or more, not overcast",
+        "wind_direction": {
+          "degrees": 990,
+          "direction": "W"
+        },
+        "wind_speed": {
+          "speed": 1,
+          "unit": "m/s"
+        },
+        "original": "79901"
+      }
+    },
+    "enumerated_groups": {
+      "air_temperature": {
+        "temperature_data": {
+          "sign": 1,
+          "value": 17.3,
+          "unit": "celsius",
+          "note": "",
+          "original": "0173"
+        }
+      },
+      "dew_point_temperature": {
+        "temperature_data": {
+          "sign": 1,
+          "value": 17.3,
+          "unit": "celsius",
+          "note": "",
+          "original": "0173"
+        }
+      },
+      "station_pressure": {
+        "value": 851.2,
+        "unit": "hPa",
+        "original": "8512"
+      },
+      "precipitation_data": {
+        "amount": 0.0,
+        "units": "mm",
+        "duration": 4,
+        "duration_description": "24 hours",
+        "original": "0004"
+      },
+      "weather_group": {
+        "present_weather": {
+          "code": 5,
+          "description": [
+            "Haze",
+            "no_precipitation"
+          ],
+          "type": "present"
+        },
+        "past_weather_1": {
+          "code": 2,
+          "description": [
+            "Rain",
+            "Liquid precipitation"
+          ],
+          "type": "past"
+        },
+        "past_weather_2": {
+          "code": null,
+          "description": null,
+          "type": "past"
+        }
+      },
+      "cloud_information": {
+        "low_clouds": {
+          "amount": "1/8 or less",
+          "cloud_type": {
+            "code": "5",
+            "description": "Stratocumulus",
+            "level": "low"
+          }
+        },
+        "mid_clouds": {
+          "cloud_type": {
+            "code": "5",
+            "description": "Altocumulus translucidus at different levels",
+            "level": "mid"
+          }
+        },
+        "high_clouds": {
+          "cloud_type": {
+            "code": "0",
+            "description": "No high clouds",
+            "level": "high"
+          }
+        }
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "temperature_data": {
+        "sign": 1,
+        "value": 16.7,
+        "unit": "celsius",
+        "note": "min",
+        "original": "0167"
+      },
+      "soil": {
+        "soil": 0,
+        "soil_description": "Ground surface dry (no cracks and no appreciable amount of dust or loose sand)",
+        "original": "0///"
+      },
+      "sunshine_duration": {
+        "duration_type": "daily",
+        "duration_hours": 6.6,
+        "original": "066",
+        "radiation_data": {
+          "radiation_code": 5,
+          "radiation_type": "longwave_up",
+          "radiation_type_description": "Upward longwave radiation during preceding 24 hours",
+          "value": 6990.0,
+          "unit": "J/cm2",
+          "original": "56990"
+        }
+      },
+      "pressure_change": {
+        "sign": -1,
+        "pressure_change": -900.6,
+        "original": "9006"
+      },
+      "precipitation_data": {
+        "amount": 0.0,
+        "units": "mm",
+        "duration": 7,
+        "duration_description": "3 hours",
+        "original": "0007"
+      },
+      "cloud_layer_data": {
+        "cloud_amount": "1",
+        "cloud_amount_description": "1/8 or less",
+        "cloud_type": "6",
+        "cloud_type_description": "Stratocumulus Sc",
+        "cloud_height": 900,
+        "cloud_height_unit": "meters",
+        "original": "1630"
+      }
+    }
+  }
+}

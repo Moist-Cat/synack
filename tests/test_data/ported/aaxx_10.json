@@ -1,0 +1,109 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 10,
+      "hour": 3,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "10034"
+    },
+    "station_info": {
+      "station_id": "89004",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "89",
+      "station_number": "004",
+      "original_message_type": "AAXX",
+      "original_station_id": "89004"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": false,
+        "is_staffed": false,
+        "lowest_cloud": "/",
+        "visibility": {
+          "value": null,
+          "unit": "km"
+        },
+        "original": "46///"
+      },
+      "wind_data": {
+        "cloud_cover": null,
+        "wind_direction": {
+          "degrees": 130,
+          "direction": "SE"
+        },
+        "wind_speed": {
+          "speed": 12,
+          "unit": "knots"
+        },
+        "original": "/1312"
+      }
+    },
+    "enumerated_groups": {
+      "air_temperature": {
+        "temperature_data": {
+          "sign": -1,
+          "value": -20.2,
+          "unit": "celsius",
+          "note": "",
+          "original": "1202"
+        }
+      },
+      "dew_point_temperature": {
+        "temperature_data": {
+          "sign": -1,
+          "value": -29.2,
+          "unit": "celsius",
+          "note": "",
+          "original": "1292"
+        }
+      },
+      "station_pressure": {
+        "value": 881.8,
+        "unit": "hPa",
+        "original": "8818"
+      },
+      "sea_level_pressure": {
+        "value": 987.9,
+        "unit": "hPa",
+        "original": "9879"
+      },
+      "pressure_tendency": {
+        "characteristic": "Increasing, then steady",
+        "characteristic_code": "1",
+        "amount": 0.5,
+        "units": "hPa",
+        "original": "1005"
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "special_phenomena": [
+        [
+          [
+            {
+              "special_phenomena": "2416",
+              "original": "2416"
+            },
+            {
+              "special_phenomena": "2734",
+              "original": "2734"
+            }
+          ],
+          {
+            "special_phenomena": "2882",
+            "original": "2882"
+          }
+        ],
+        {
+          "special_phenomena": "2921",
+          "original": "2921"
+        }
+      ]
+    }
+  }
+}

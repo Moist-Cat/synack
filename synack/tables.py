@@ -617,7 +617,7 @@ SPECIAL_CLOUD_HEIGHT = {
     99: 0,
 }
 
-DIRECTIONS = [
+COMPASS = [
     "N",
     "NNE",
     "NE",
@@ -635,3 +635,153 @@ DIRECTIONS = [
     "NW",
     "NNW",
 ]
+
+# 1806
+EVAPORATION_CODES = {
+    "0": ("US open pan evaporimeter (without lid)", "Evaporation"),
+    "1": ("US open pan evaporimeter (with screen)", "Evaporation"),
+    "2": ("GGI-3000 evaporimeter (sunken)", "Evaporation"),
+    "3": ("20 m² tank", "Evaporation"),
+    "4": ("Other", "Evaporation"),
+    "5": ("Rice", "Evapotranspiration"),
+    "6": ("Wheat", "Evapotranspiration"),
+    "7": ("Corn", "Evapotranspiration"),
+    "8": ("Sorghum", "Evapotranspiration"),
+    "9": ("Other crops", "Evapotranspiration"),
+}
+
+# rad
+RADIATION_TYPES_HOURLY = {
+    "0": ("net_positive", "Net positive radiation during preceding hour", "kJ/m2"),
+    "1": ("net_negative", "Net negative radiation during preceding hour", "kJ/m2"),
+    "2": ("solar_global", "Global solar radiation during preceding hour", "kJ/m2"),
+    "3": ("solar_diffuse", "Diffuse solar radiation during preceding hour", "kJ/m2"),
+    "4": (
+        "longwave_down",
+        "Downward longwave radiation during preceding hour",
+        "kJ/m2",
+    ),
+    "5": ("longwave_up", "Upward longwave radiation during preceding hour", "kJ/m2"),
+    "6": ("shortwave", "Shortwave radiation during preceding hour", "kJ/m2"),
+}
+
+RADIATION_TYPES_DAILY = {
+    "0": ("net_positive", "Net positive radiation during preceding 24 hours", "J/cm2"),
+    "1": ("net_negative", "Net negative radiation during preceding 24 hours", "J/cm2"),
+    "2": ("solar_global", "Global solar radiation during preceding 24 hours", "J/cm2"),
+    "3": (
+        "solar_diffuse",
+        "Diffuse solar radiation during preceding 24 hours",
+        "J/cm2",
+    ),
+    "4": (
+        "longwave_down",
+        "Downward longwave radiation during preceding 24 hours",
+        "J/cm2",
+    ),
+    "5": (
+        "longwave_up",
+        "Upward longwave radiation during preceding 24 hours",
+        "J/cm2",
+    ),
+    "6": ("shortwave", "Shortwave radiation during preceding 24 hours", "J/cm2"),
+}
+
+# Special radiation types from 12.4.7.1.2
+SPECIAL_RADIATION_TYPES = {
+    "5407": (
+        "net_shortwave_hourly",
+        "Net shortwave radiation during preceding hour",
+        "kJ m⁻²",
+    ),
+    "5408": (
+        "solar_direct_hourly",
+        "Direct solar radiation during preceding hour",
+        "kJ m⁻²",
+    ),
+    "5507": (
+        "net_shortwave_daily",
+        "Net shortwave radiation during preceding 24 hours",
+        "J cm⁻²",
+    ),
+    "5508": (
+        "solar_direct_daily",
+        "Direct solar radiation during preceding 24 hours",
+        "J cm⁻²",
+    ),
+}
+
+# 0700
+DIRECTION = {
+    "1": "NE",
+    "2": "E",
+    "3": "SE",
+    "4": "S",
+    "5": "SW",
+    "6": "W",
+    "7": "NW",
+    "8": "N",
+}
+
+SPECIAL_DIRECTION = {
+    "clouds": {
+        "9": "Unknown or invisible",
+        "0": "Stationary or cloudless",
+    },  # D_L D_M D_H
+    "phenomena": {"9": "All directions", "0": "In the station"},  # D_a
+}
+
+# 1004
+CLOUD_ANGLE = {
+    "0": 90,
+    "1": 45,
+    "2": 30,
+    "3": 20,
+    "4": 15,
+    "5": 12,
+    "6": 9,
+    "7": 7,
+    "8": 6,
+    "9": 5,
+}
+
+TEMPERATURE_CHANGE = {
+    "0": 10,
+    "1": 11,
+    "2": 12,
+    "3": 13,
+    "4": 14,
+    "5": 5,
+    "6": 6,
+    "7": 7,
+    "8": 8,
+    "9": 9,
+}
+
+# 0901
+SOIL_STATE = {
+    "0": "Ground surface dry (no cracks and no appreciable amount of dust or loose sand)",
+    "1": "Ground surface moist",
+    "2": "Ground surface wet (water standing in puddles large or small on the surface)",
+    "3": "Ground flooded",
+    "4": "Ground surface frozen",
+    "5": "Glaze (smooth ice) on ground",
+    "6": "Loose dry dust or sand not completely covering the ground",
+    "7": "Thin layer of loose dry dust or sand completely covering the ground",
+    "8": "Moderate or thick layer of loose dry dust or sand completely covering the ground",
+    "9": "Ground extremely dry and cracked",
+}
+
+# 1600
+LOWEST_CLOUD_HEIGHT = {
+    "0": (0, 50),
+    "1": (50, 100),
+    "2": (100, 200),
+    "3": (200, 300),
+    "4": (300, 600),
+    "5": (600, 100),
+    "6": (1000, 1500),
+    "7": (1500, 2000),
+    "8": (2000, 2500),
+    "9": (2500, 9999),
+}

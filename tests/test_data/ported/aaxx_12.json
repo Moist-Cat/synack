@@ -1,20 +1,20 @@
 {
   "section_0": {
     "date_location": {
-      "day": 20,
-      "hour": 10,
+      "day": 10,
+      "hour": 3,
       "wind_indicator": "4",
       "wind_units": "knots",
-      "original": "20104"
+      "original": "10034"
     },
     "station_info": {
-      "station_id": "89646",
+      "station_id": "89004",
       "message_type": "AAXX",
       "station_type": "land_station",
       "block_number": "89",
-      "station_number": "646",
+      "station_number": "004",
       "original_message_type": "AAXX",
-      "original_station_id": "89646"
+      "original_station_id": "89004"
     }
   },
   "section_1": {
@@ -32,45 +32,66 @@
       "wind_data": {
         "cloud_cover": null,
         "wind_direction": {
-          "degrees": 220,
-          "direction": "SW"
+          "degrees": 130,
+          "direction": "SE"
         },
         "wind_speed": {
-          "speed": 113,
+          "speed": 12,
           "unit": "knots"
         },
-        "original": "/2299"
+        "original": "/1312"
       }
     },
     "enumerated_groups": {
+      "air_temperature": {
+        "temperature_data": {
+          "sign": -1,
+          "value": -20.2,
+          "unit": "celsius",
+          "note": "",
+          "original": "1202"
+        }
+      },
       "dew_point_temperature": {
         "temperature_data": {
           "sign": -1,
-          "value": -7.9,
+          "value": -29.2,
           "unit": "celsius",
           "note": "",
-          "original": "9079"
+          "original": "1292"
         }
       },
       "station_pressure": {
-        "value": 770.8,
+        "value": 881.8,
         "unit": "hPa",
-        "original": "7708"
+        "original": "8818"
       },
       "sea_level_pressure": {
-        "value": 201.0,
+        "value": 987.9,
         "unit": "hPa",
-        "original": "2010"
+        "original": "9879"
+      },
+      "pressure_tendency": {
+        "characteristic": "Increasing, then steady",
+        "characteristic_code": "1",
+        "amount": 0.5,
+        "units": "hPa",
+        "original": "1005"
       }
     }
   },
   "section_3": {
     "section_3_groups": {
-      "section_3_group_0": {
-        "field": "",
-        "description": "Unsupported Section 3 group type: 0"
-      }
+      "special_phenomena": [
+        {
+          "special_phenomena": "5095",
+          "original": "5095"
+        },
+        {
+          "special_phenomena": "5150",
+          "original": "5150"
+        }
+      ]
     }
-  },
-  "str": "="
+  }
 }

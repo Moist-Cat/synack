@@ -1,0 +1,78 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 1,
+      "hour": 0,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "01004"
+    },
+    "station_info": {
+      "station_id": "89022",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "89",
+      "station_number": "022",
+      "original_message_type": "AAXX",
+      "original_station_id": "89022"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": false,
+        "is_staffed": true,
+        "lowest_cloud": "7",
+        "visibility": {
+          "value": 40,
+          "unit": "km"
+        },
+        "original": "32782"
+      },
+      "wind_data": {
+        "cloud_cover": "6/8",
+        "wind_direction": {
+          "degrees": 150,
+          "direction": "SSE"
+        },
+        "wind_speed": {
+          "speed": 6,
+          "unit": "knots"
+        },
+        "original": "61506"
+      }
+    },
+    "enumerated_groups": {
+      "station_pressure": {
+        "value": 1011.1,
+        "unit": "hPa",
+        "original": "0111"
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "temperature_data": [
+        {
+          "sign": 1,
+          "value": 17.8,
+          "unit": "celsius",
+          "note": "max",
+          "original": "0178"
+        },
+        {
+          "sign": -1,
+          "value": -5.3,
+          "unit": "celsius",
+          "note": "min",
+          "original": "1053"
+        }
+      ],
+      "soil": {
+        "soil": 4,
+        "soil_description": "Ground surface frozen",
+        "original": "4810"
+      }
+    }
+  }
+}

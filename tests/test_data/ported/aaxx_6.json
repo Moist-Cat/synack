@@ -1,0 +1,77 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 1,
+      "hour": 0,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "01004"
+    },
+    "station_info": {
+      "station_id": "89022",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "89",
+      "station_number": "022",
+      "original_message_type": "AAXX",
+      "original_station_id": "89022"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": true,
+        "is_staffed": true,
+        "lowest_cloud": "7",
+        "visibility": {
+          "value": 40,
+          "unit": "km"
+        },
+        "original": "22782"
+      },
+      "wind_data": {
+        "cloud_cover": "6/8",
+        "wind_direction": {
+          "degrees": 150,
+          "direction": "SSE"
+        },
+        "wind_speed": {
+          "speed": 6,
+          "unit": "knots"
+        },
+        "original": "61506"
+      }
+    },
+    "enumerated_groups": {
+      "station_pressure": {
+        "value": 1011.1,
+        "unit": "hPa",
+        "original": "0111"
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "sunshine_duration": {
+        "duration_type": "daily",
+        "duration_hours": null,
+        "original": "///",
+        "radiation_data": {
+          "radiation_code": 2,
+          "radiation_type": "solar_global",
+          "radiation_type_description": "Global solar radiation during preceding 24 hours",
+          "value": 884.0,
+          "unit": "J/cm2",
+          "original": "20884"
+        }
+      },
+      "precipitation_data": {
+        "amount": 19.0,
+        "units": "mm",
+        "duration": 2,
+        "duration_description": "12 hours",
+        "original": "0192"
+      }
+    }
+  }
+}

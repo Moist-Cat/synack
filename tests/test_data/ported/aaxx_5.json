@@ -1,0 +1,84 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 1,
+      "hour": 0,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "01004"
+    },
+    "station_info": {
+      "station_id": "89022",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "89",
+      "station_number": "022",
+      "original_message_type": "AAXX",
+      "original_station_id": "89022"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": true,
+        "is_staffed": true,
+        "lowest_cloud": "7",
+        "visibility": {
+          "value": 40,
+          "unit": "km"
+        },
+        "original": "22782"
+      },
+      "wind_data": {
+        "cloud_cover": "6/8",
+        "wind_direction": {
+          "degrees": 150,
+          "direction": "SSE"
+        },
+        "wind_speed": {
+          "speed": 6,
+          "unit": "knots"
+        },
+        "original": "61506"
+      }
+    },
+    "enumerated_groups": {
+      "station_pressure": {
+        "value": 1011.1,
+        "unit": "hPa",
+        "original": "0111"
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "sunshine_duration": {
+        "duration_type": "daily",
+        "duration_hours": 5.5,
+        "original": "055",
+        "radiation_data": {
+          "radiation_code": 0,
+          "radiation_type": "net_positive",
+          "radiation_type_description": "Net positive radiation during preceding 24 hours",
+          "value": 1234.0,
+          "unit": "J/cm2",
+          "original": "01234"
+        }
+      },
+      "temperature_data": {
+        "sign": 1,
+        "value": 32.9,
+        "unit": "celsius",
+        "note": "max",
+        "original": "0329"
+      },
+      "precipitation_data": {
+        "amount": 12.0,
+        "units": "mm",
+        "duration": 3,
+        "duration_description": "18 hours",
+        "original": "0123"
+      }
+    }
+  }
+}

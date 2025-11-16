@@ -18,13 +18,21 @@ from synack.tree import (
     ErrorNode,
 )
 
-__version__ = "0.2.1"
+__version__ = "0.3.1"
+
+
+class ParserState:
+    SECTION_0 = 0
+    SECTION_1 = 1
+    SECTION_3 = 3
+    SECTION_3_GROUP_5 = 3.5
 
 
 class SYNOPParser:
     def __init__(self):
         self.lexer = None
         self.parser = None
+        self.state = ParserState.SECTION_0
         self.errors = []
         self.build_lexer()
         self.build_parser()
@@ -39,35 +47,56 @@ class SYNOPParser:
         "DIGITS",
         "LETTERS",
         "EQUALS",
-        "WHITESPACE",
         "ZERO_CHUNK",
-        "DELIMITER_2",
+        "FIVE_CHUNK",
         "DELIMITER_3",
-        "DELIMITER_4",
         "DELIMITER_5",
+        "RADIATION_EXTRA",
     )
 
     # Token regex patterns
     t_LETTERS = r"AAXX|BBXX"
-    t_WHITESPACE = r"\s+"
 
     # Ignore whitespace
     t_ignore = " \t"
 
     t_EQUALS = "="
 
-    t_DELIMITER_2 = "222"
-    t_DELIMITER_3 = "333"
-    t_DELIMITER_4 = "444"
     t_DELIMITER_5 = "555"
 
+    # context-aware tokens
     def t_ZERO_CHUNK(self, t):
-        r"00[0-9\/]{1,3}"
+        r"00[0-9\/]{2,3}"
+        if self.state != ParserState.SECTION_1:
+            t.type = "DIGITS"
+        return t
+
+    def t_FIVE_CHUNK(self, t):
+        r"55[0-9\/]{2,3}"
+        if self.state != ParserState.SECTION_3:
+            t.type = "DIGITS"
+        else:
+            self.state = ParserState.SECTION_3_GROUP_5
+        return t
+
+    def t_RADIATION_EXTRA(self, t):
+        r"[0-5][0-9\/]{3,4}"
+        if self.state != ParserState.SECTION_3_GROUP_5:
+            t.type = "DIGITS"
+        return t
+
+    def t_DELIMITER_3(self, t):
+        "333"
+        self.state = ParserState.SECTION_3
         return t
 
     def t_DIGITS(self, t):
         r"[0-9\/]{4,6}"
-        # t.value.replace("\/", "0")
+        if len(self.parser.symstack) == 3:
+            self.state = ParserState.SECTION_1
+        elif self.state == ParserState.SECTION_3_GROUP_5:
+            # unset flag after parsing section 3 group 5
+            self.state = ParserState.SECTION_3
         return t
 
     def t_error(self, t):
@@ -83,12 +112,19 @@ class SYNOPParser:
 
     def p_synop_message(self, p):
         """
-        synop_message : section_0 section_1 EQUALS
+        synop_message : section_0 EQUALS
+                      | section_0 section_1 EQUALS
                       | section_0 section_1 section_3 EQUALS
+                      | section_0 section_1 section_3 section_5 EQUALS
+                      | section_0
                       | section_0 section_1
                       | section_0 section_1 section_3
+                      | section_0 section_1 section_3 section_5
         """
-        if len(p) > 3:
+        # there are messages with just section 0 (ping, it seems)
+        if len(p) > 4:
+            p[0] = Metadata(p[1], p[2], p[3], p[4], name="main")
+        elif len(p) > 3:
             p[0] = Metadata(p[1], p[2], p[3], name="main")
         elif len(p) > 2:
             p[0] = Metadata(p[1], p[2], name="main")
@@ -188,7 +224,9 @@ class SYNOPParser:
         if len(group) < 4:
             msg = f"Invalid temperature/pressure group: {group}"
             self.errors.append(msg)
-            group_enumerated = ErrorNode(field=f"enumerated_group_{group_type}", description=msg)
+            group_enumerated = ErrorNode(
+                field=f"enumerated_group_{group_type}", description=msg
+            )
         else:
             group_enumerated = build_enumerated_group(group_type, data)
         p[0] = group_enumerated
@@ -213,17 +251,60 @@ class SYNOPParser:
     def p_section_3_group(self, p):
         """
         section_3_group : DIGITS
+                        | FIVE_CHUNK radiation_extra
         """
+        # FIVE_CHUNK can't be alone
         group = p[1]
         group_type = group[0]
         data = group[1:]
+        extra_data = p[2] if len(p) >= 3 else None
         if len(data) < 4:
             msg = f"Invalid section 3 group: {group}"
             self.errors.append(msg)
-            decoded_group = ErrorNode(field=f"section_3_group_{group_type}", description=msg)
+            decoded_group = ErrorNode(
+                field=f"section_3_group_{group_type}", description=msg
+            )
         else:
-            decoded_group = build_section_3_group(group_type, data)
+            decoded_group = build_section_3_group(
+                group_type, data, extra_data=extra_data
+            )
         p[0] = decoded_group
+
+    def p_radiation_extra(self, p):
+        """
+        radiation_extra : RADIATION_EXTRA radiation_extra
+                        | RADIATION_EXTRA
+        """
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[2].append(p[1])
+            p[0] = p[2]
+
+    def p_section_5(self, p):
+        """
+        section_5 : DELIMITER_5 section_5_groups
+        """
+        # placeholder
+        p[0] = Metadata(p[2], name="section_5")
+
+    def p_section_5_groups(self, p):
+        """
+        section_5_groups : section_5_group section_5_groups
+                         | section_5_group
+        """
+        if len(p) == 2:
+            p[0] = Metadata(p[1], name="section_5_groups")
+        else:
+            p[2].add(p[1])
+            p[0] = p[2]
+
+    def p_section_5_group(self, p):
+        """
+        section_5_group : DIGITS
+        """
+        # FIVE_CHUNK can't be alone
+        p[0] = p[1]
 
     # ==================== PUBLIC INTERFACE ====================
 

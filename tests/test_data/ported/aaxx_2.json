@@ -1,0 +1,63 @@
+{
+  "section_0": {
+    "date_location": {
+      "day": 20,
+      "hour": 6,
+      "wind_indicator": "4",
+      "wind_units": "knots",
+      "original": "20064"
+    },
+    "station_info": {
+      "station_id": "67005",
+      "message_type": "AAXX",
+      "station_type": "land_station",
+      "block_number": "67",
+      "station_number": "005",
+      "original_message_type": "AAXX",
+      "original_station_id": "67005"
+    }
+  },
+  "section_1": {
+    "wind_visibility_clouds": {
+      "misc_data": {
+        "precipitation_included": true,
+        "is_staffed": true,
+        "lowest_cloud": "5",
+        "visibility": {
+          "value": 20,
+          "unit": "km"
+        },
+        "original": "12570"
+      },
+      "wind_data": {
+        "cloud_cover": "5/8",
+        "wind_direction": {
+          "degrees": 40,
+          "direction": "NE"
+        },
+        "wind_speed": {
+          "speed": 2,
+          "unit": "knots"
+        },
+        "original": "50402"
+      }
+    },
+    "enumerated_groups": {
+      "precipitation_data": {
+        "amount": 0.0,
+        "units": "mm",
+        "duration": 4,
+        "duration_description": "24 hours",
+        "original": "0004"
+      }
+    }
+  },
+  "section_3": {
+    "section_3_groups": {
+      "section_3_group_0": {
+        "field": "",
+        "description": "Unsupported Section 3 group type: 0"
+      }
+    }
+  }
+}
