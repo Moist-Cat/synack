@@ -23,6 +23,10 @@
         "precipitation_included": true,
         "is_staffed": true,
         "lowest_cloud": "5",
+        "lowest_cloud_height": [
+          600,
+          100
+        ],
         "visibility": {
           "value": 15,
           "unit": "km"
@@ -140,19 +144,24 @@
         "duration_type": "daily",
         "duration_hours": 6.6,
         "original": "066",
-        "radiation_data": {
-          "radiation_code": 5,
-          "radiation_type": "longwave_up",
-          "radiation_type_description": "Upward longwave radiation during preceding 24 hours",
-          "value": 6990.0,
-          "unit": "J/cm2",
-          "original": "56990"
-        }
-      },
-      "pressure_change": {
-        "sign": -1,
-        "pressure_change": -900.6,
-        "original": "9006"
+        "radiation_data": [
+          {
+            "radiation_code": 5,
+            "radiation_type": "longwave_up",
+            "radiation_type_description": "Upward longwave radiation during preceding 24 hours",
+            "value": 9006.0,
+            "unit": "J/cm2",
+            "original": "59006"
+          },
+          {
+            "radiation_code": 5,
+            "radiation_type": "longwave_up",
+            "radiation_type_description": "Upward longwave radiation during preceding 24 hours",
+            "value": 6990.0,
+            "unit": "J/cm2",
+            "original": "56990"
+          }
+        ]
       },
       "precipitation_data": {
         "amount": 0.0,

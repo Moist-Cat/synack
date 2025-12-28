@@ -23,6 +23,10 @@
         "precipitation_included": true,
         "is_staffed": true,
         "lowest_cloud": "7",
+        "lowest_cloud_height": [
+          1500,
+          2000
+        ],
         "visibility": {
           "value": 40,
           "unit": "km"
@@ -56,14 +60,16 @@
         "duration_type": "daily",
         "duration_hours": null,
         "original": "///",
-        "radiation_data": {
-          "radiation_code": 2,
-          "radiation_type": "solar_global",
-          "radiation_type_description": "Global solar radiation during preceding 24 hours",
-          "value": 884.0,
-          "unit": "J/cm2",
-          "original": "20884"
-        }
+        "radiation_data": [
+          {
+            "radiation_code": 2,
+            "radiation_type": "solar_global",
+            "radiation_type_description": "Global solar radiation during preceding 24 hours",
+            "value": 884.0,
+            "unit": "J/cm2",
+            "original": "20884"
+          }
+        ]
       },
       "precipitation_data": {
         "amount": 19.0,

@@ -23,6 +23,10 @@
         "precipitation_included": true,
         "is_staffed": true,
         "lowest_cloud": "4",
+        "lowest_cloud_height": [
+          300,
+          600
+        ],
         "visibility": {
           "value": 15,
           "unit": "km"

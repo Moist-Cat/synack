@@ -23,6 +23,7 @@
         "precipitation_included": false,
         "is_staffed": false,
         "lowest_cloud": "/",
+        "lowest_cloud_height": null,
         "visibility": {
           "value": null,
           "unit": "km"
@@ -83,24 +84,16 @@
   "section_3": {
     "section_3_groups": {
       "special_phenomena": [
-        [
-          [
-            {
-              "special_phenomena": "2416",
-              "original": "2416"
-            },
-            {
-              "special_phenomena": "2734",
-              "original": "2734"
-            }
-          ],
-          {
-            "special_phenomena": "2882",
-            "original": "2882"
-          }
-        ],
         {
-          "special_phenomena": "2921",
+          "original": "2416"
+        },
+        {
+          "original": "2734"
+        },
+        {
+          "original": "2882"
+        },
+        {
           "original": "2921"
         }
       ]

@@ -23,6 +23,7 @@
         "precipitation_included": false,
         "is_staffed": false,
         "lowest_cloud": "/",
+        "lowest_cloud_height": null,
         "visibility": {
           "value": null,
           "unit": "km"
@@ -109,54 +110,31 @@
   "section_3": {
     "section_3_groups": {
       "special_phenomena": [
-        [
-          [
-            [
-              [
-                [
-                  [
-                    [
-                      {
-                        "special_phenomena": "9050",
-                        "original": "9050"
-                      },
-                      {
-                        "special_phenomena": "9114",
-                        "original": "9114"
-                      }
-                    ],
-                    {
-                      "special_phenomena": "9115",
-                      "original": "9115"
-                    }
-                  ],
-                  {
-                    "special_phenomena": "9190",
-                    "original": "9190"
-                  }
-                ],
-                {
-                  "special_phenomena": "9273",
-                  "original": "9273"
-                }
-              ],
-              {
-                "special_phenomena": "9349",
-                "original": "9349"
-              }
-            ],
-            {
-              "special_phenomena": "9429",
-              "original": "9429"
-            }
-          ],
-          {
-            "special_phenomena": "9605",
-            "original": "9605"
-          }
-        ],
         {
-          "special_phenomena": "9918",
+          "original": "9050"
+        },
+        {
+          "original": "9114"
+        },
+        {
+          "original": "9115"
+        },
+        {
+          "original": "9190"
+        },
+        {
+          "original": "9273"
+        },
+        {
+          "original": "9349"
+        },
+        {
+          "original": "9429"
+        },
+        {
+          "original": "9605"
+        },
+        {
           "original": "9918"
         }
       ]
