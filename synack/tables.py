@@ -785,3 +785,11 @@ LOWEST_CLOUD_HEIGHT = {
     "8": (2000, 2500),
     "9": (2500, 9999),
 }
+
+CLOUD_SPEED_TABLE = {
+    "01": "Very slow",
+    "02": "Slow",
+    "03": "Normal",
+    "04": "Fast",
+    "05": "Very fast",
+}

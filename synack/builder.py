@@ -1,6 +1,7 @@
 from synack.tree import *
 from synack.tables import *
 
+
 # ==================== AST BUILDER ====================
 def build_station_info(message_type: str, station_group: str) -> Metadata:
     """Build metadata section of AST"""
@@ -94,6 +95,7 @@ def build_enumerated_group(group_type, data):
         # NOTE Depending of the "regional agreement"
         # The fourth group could be either 4PPPP or 4a_3hhh
         # we assume 4PPPP here
+        # It's 4PPPP according to the docs
         result = PressureData(
             data, original=data, name=ENUMERATED_GROUP[int(group_type) - 1]
         )
@@ -208,12 +210,13 @@ def build_section_3_group(group_type, data, extra_data=None):
     """
     Build Section 3 groups (333xx groups) according to WMO standard
     """
-    # no zero group
     # doesn't handle the mysterious 80000 group (and the extra groups that follow)
-    if group_type in {"1", "2"}:  # 1snTxTxTx 2snTnTnTn
+    if group_type == "0":  # the famous regional zero group
+        result = _parse_cloud_movement(data)
+    elif group_type in {"1", "2"}:  # 1snTxTxTx 2snTnTnTn
         # recycled
         result = _parse_temperature(data, note="max" if group_type == "1" else "min")
-    elif group_type == "3":  # 3Ejjj (depends on the regional consensus)
+    elif group_type == "3":  # 3Ejjj (depends on the regional consensus, though we do not use jjj)
         result = _parse_soil(data)
     elif group_type == "4":  # 4E'sss - Snow depth
         result = _parse_snow_depth(data)
@@ -233,6 +236,30 @@ def build_section_3_group(group_type, data, extra_data=None):
             description=f"Unsupported Section 3 group type: {group_type}",
         )
     return result
+
+
+def _parse_cloud_movement(data):
+    # Massive description in natural language (table 19 "SYNOP Met.pdf", from Ecured)
+    properties = data[0]
+    dir_low_code = data[1:2]
+    dir_low_description= DIRECTION[dir_low_code]
+
+    dir_mid_code = data[2:3]
+    dir_mid_description = DIRECTION[dir_mid_code]
+
+    dir_high_code = data[3:4]
+    dir_high_description = DIRECTION[dir_high_code]
+
+    return CloudMovement(
+        properties,
+        dir_low_code=dir_low_code,
+        dir_low_description=dir_low_description,
+        dir_mid_code=dir_mid_code,
+        dir_mid_description=dir_mid_description,
+        dir_high_code=dir_high_code,
+        dir_high_description=dir_high_description,
+        original=data,
+    )
 
 
 def _parse_soil(data):
@@ -334,7 +361,9 @@ def _parse_sunshine(data, extra_data, type_="daily"):
     # > 240 is technically valid, though
     duration = data[: 3 if type_ == "daily" else 2]  # SSS/SS
 
-    radiation_data = [_parse_radiation_supplementary(extra, type_) for extra in extra_data]
+    radiation_data = [
+        _parse_radiation_supplementary(extra, type_) for extra in extra_data
+    ]
 
     return SunshineDuration(
         duration_type=type_,
@@ -423,6 +452,39 @@ def _parse_special_phenomena(data):
     # TABLE 3778
     # 100 cases, each one with a different way of
     # interpreting s_p s_p based on S_p S_p
-    return Metadata(
-        {"original": data}, name="special_phenomena"
-    )
+    return Metadata({"original": data}, name="special_phenomena")
+
+
+# section 5
+def build_section_5_group(group_type, data):
+    """
+    Build Section 5 groups (333xx groups) according to the local standard
+    """
+    if group_type == "1":  # 1 d_l d_l v_l v_l
+        wind_dir_code = data[0:2]
+        cloud_speed_code = data[2:4]
+
+        result = CloudSpeed(
+            cloud_direction=WindDirection(wind_dir_code),
+            cloud_speed_code=cloud_speed_code,
+            cloud_speed_description=CLOUD_SPEED_TABLE.get(cloud_speed_code),
+            original=data,
+        )
+    elif group_type == "2":  # 2 d_m d_m d_h d_h
+        mid_cloud_dir = WindDirection(data[0:3])
+        high_cloud_dir = WindDirection(data[3:5])
+
+        result = Metadata(
+            {
+                "mid_cloud_dir": mid_cloud_dir,
+                "high_cloud_dir": high_cloud_dir,
+                "original": data,
+            },
+            name="section_5_group_2",
+        )
+    else:
+        result = ErrorNode(
+            name=f"section_5_group_{group_type}",
+            description=f"Unsupported Section 5 group type: {group_type}",
+        )
+    return result

@@ -12,13 +12,14 @@ from synack.builder import (
     build_wind,
     build_enumerated_group,
     build_section_3_group,
+    build_section_5_group,
 )
 from synack.tree import (
     Metadata,
     ErrorNode,
 )
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 
 class ParserState:
@@ -285,7 +286,6 @@ class SYNOPParser:
         """
         section_5 : DELIMITER_5 section_5_groups
         """
-        # placeholder
         p[0] = Metadata(p[2], name="section_5")
 
     def p_section_5_groups(self, p):
@@ -303,8 +303,10 @@ class SYNOPParser:
         """
         section_5_group : DIGITS
         """
-        # FIVE_CHUNK can't be alone
-        p[0] = p[1]
+        group = p[1]
+        group_type = group[0]
+        group_data = group[1:]
+        p[0] = build_section_5_group(group_type, group_data)
 
     # ==================== PUBLIC INTERFACE ====================
 

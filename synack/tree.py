@@ -235,6 +235,7 @@ class WindDirection(ASTNode):
             return value
         # 16 directions
         # % 16 <=> zero indexed
+        # numbers go from 0 (0) to 36 (360) and map to the compass
         compass_idx = round(self.degrees / 22.5) % 16
         return COMPASS[compass_idx]
 
@@ -262,6 +263,35 @@ class WindSpeed(ASTNode):
     def validate(self):
         return []
 
+@dataclass
+class CloudMovement(ASTNode):
+    properties: int
+
+    dir_low_code: int
+    dir_low_description: str
+
+    dir_mid_code: int
+    dir_mid_description: str
+
+    dir_high_code: int
+    dir_high_description: str
+
+    original: str
+
+    def to_dict(self):
+        return {
+            "properties": self.properties,
+            "dir_low_code": self.dir_low_code,
+            "dir_low_description": self.dir_low_description,
+
+            "dir_mid_code": self.dir_mid_code,
+            "dir_mid_description": self.dir_mid_description,
+
+            "dir_high_code": self.dir_high_code,
+            "dir_high_description": self.dir_high_description,
+
+            "original": self.original,
+        }
 
 @dataclass
 class Visibility(ASTNode):
@@ -832,3 +862,23 @@ class Soil(ASTNode):
             "Group partially implemented",
         ]
         return errors
+
+
+@dataclass
+class CloudSpeed(ASTNode):
+    """
+    1 d_l d_l v_l v_l
+    """
+
+    cloud_direction: WindDirection
+    cloud_speed_code: int
+    cloud_speed_description: str
+    original: str = ""
+
+    def to_dict(self):
+        return {
+            "cloud_direction": self.cloud_direction.to_dict(),
+            "cloud_speed_code": self.cloud_speed_code,
+            "cloud_speed_description": self.cloud_speed_description,
+            "original": self.original,
+        }
