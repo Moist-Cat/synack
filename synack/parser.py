@@ -4,6 +4,13 @@ import ply.yacc as yacc
 import re
 from datetime import datetime, timedelta
 import traceback
+import time
+
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import ConsoleMetricExporter
+from opentelemetry.sdk.resources import Resource
 
 from synack.builder import (
     build_station_info,
@@ -40,6 +47,50 @@ class SYNOPParser:
 
         # Add this to semantic analysis when we implement it
         self.units = {}
+
+        # Initialize OpenTelemetry metrics if available
+        self._init_otel_metrics()
+
+    def _init_otel_metrics(self):
+        """Set up OpenTelemetry metrics instruments."""
+
+        # Create a resource to identify the service
+        resource = Resource.create(attributes={"service.name": "synop_parser"})
+
+        # Use ConsoleMetricExporter for demonstration; replace with OTLPExporter in production
+        reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        provider = MeterProvider(resource=resource, metric_readers=[reader])
+        metrics.set_meter_provider(provider)
+
+        # Get a meter
+        self.meter = metrics.get_meter(__name__)
+
+        # Create instruments
+        self.parse_counter = self.meter.create_counter(
+            name="synop.parse.count",
+            description="Total number of parse calls",
+            unit="1",
+        )
+        self.success_counter = self.meter.create_counter(
+            name="synop.parse.success",
+            description="Number of successful parses",
+            unit="1",
+        )
+        self.error_counter = self.meter.create_counter(
+            name="synop.parse.error",
+            description="Number of parses that resulted in errors",
+            unit="1",
+        )
+        self.duration_histogram = self.meter.create_histogram(
+            name="synop.parse.duration",
+            description="Duration of parse operation in seconds",
+            unit="s",
+        )
+        self.length_histogram = self.meter.create_histogram(
+            name="synop.message.length",
+            description="Length of the raw SYNOP message (characters)",
+            unit="1",
+        )
 
     # ==================== LEXER DEFINITION ====================
 
@@ -309,7 +360,6 @@ class SYNOPParser:
         p[0] = build_section_5_group(group_type, group_data)
 
     # ==================== PUBLIC INTERFACE ====================
-
     def parse(self, synop_message):
         """
         Parse a SYNOP message and return structured data
@@ -320,21 +370,48 @@ class SYNOPParser:
         Returns:
             dict: Structured weather data with original codes and interpretations
         """
+        # Start timing for duration metric
+        start_time = time.perf_counter()
+
+        # Record message length
+        if self.length_histogram:
+            self.length_histogram.record(len(synop_message))
+
+        # Increment parse count
+        if self.parse_counter:
+            self.parse_counter.add(1)
+
         # Reset errors for new parse
         self.errors = []
 
         # Clean the input message
         clean_message = self._clean_synop_message(synop_message)
 
+        success = False
         try:
             result = self.parser.parse(clean_message, lexer=self.lexer)
             if not result:
                 result = {}
-            return {"errors": self.errors.copy(), "message": result}
+            return_dict = {"errors": self.errors.copy(), "message": result}
+            success = len(self.errors) == 0
+            return return_dict
         except Exception as e:
             self.errors.extend(traceback.format_exception(e))
             self.errors.append(f"Parser error: {str(e)}")
-            return {"errors": self.errors, "message": synop_message}
+            return_dict = {"errors": self.errors, "message": synop_message}
+            success = False
+            return return_dict
+        finally:
+            # Record metrics
+            duration = time.perf_counter() - start_time
+            if self.duration_histogram:
+                self.duration_histogram.record(duration)
+            if success:
+                if self.success_counter:
+                    self.success_counter.add(1)
+            else:
+                if self.error_counter:
+                    self.error_counter.add(1)
 
     def parse_as_json(self, synop_message):
         return json.dumps(self.parse(synop_message), indent=2, default=str)

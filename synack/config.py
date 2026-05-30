@@ -21,7 +21,7 @@ APP_NAME = "synack"
 BASE_DIR = Path(__file__).parent
 
 # Config
-DEBUG = True
+DEBUG = False
 FILE_LOGGING = os.getenv("SYNACK_FILELOGGING", True)
 if isinstance(FILE_LOGGING, str) and not FILE_LOGGING.strip():
     FILE_LOGGING = False
