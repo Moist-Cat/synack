@@ -1,1 +1,1 @@
-
+from synack import config

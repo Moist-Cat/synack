@@ -713,6 +713,8 @@ SPECIAL_RADIATION_TYPES = {
 
 # 0700
 DIRECTION = {
+    "0": "NONE",
+
     "1": "NE",
     "2": "E",
     "3": "SE",
@@ -721,6 +723,8 @@ DIRECTION = {
     "6": "W",
     "7": "NW",
     "8": "N",
+
+    "9": "ALL",
 }
 
 SPECIAL_DIRECTION = {
